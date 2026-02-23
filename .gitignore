@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+.venv/
+venv/
+.env
+
+.pytest_cache/
+.coverage
+htmlcov/
+
+*.pyc
+*.pyo
+
+# memory and run state (project-specific; teams may want to gitignore these)
+# memory/
+# runs/

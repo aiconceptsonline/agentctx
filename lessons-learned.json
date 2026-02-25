@@ -1,0 +1,96 @@
+{
+  "format_version": "1.0",
+  "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
+  "entries": [
+    {
+      "date": "2026-02-24",
+      "phase": "1",
+      "category": "testing",
+      "lesson": "Test doubles belong in src/, not tests/",
+      "context": "FakeLLMAdapter was initially written in tests/conftest.py. Any test file that tried `from tests.conftest import FakeLLMAdapter` got ModuleNotFoundError because tests/ has no __init__.py and pytest does not add it to sys.path as a package.",
+      "resolution": "Moved FakeLLMAdapter to src/agentctx/testing.py. Now importable as `from agentctx.testing import FakeLLMAdapter` everywhere — and available to downstream users writing their own tests.",
+      "rule": "Put test doubles that are useful to library consumers in src/, not tests/."
+    },
+    {
+      "date": "2026-02-24",
+      "phase": "1",
+      "category": "testing",
+      "lesson": "importlib.reload() is fragile for testing lazy imports",
+      "context": "A test for ClaudeAdapter used monkeypatch + importlib.reload() to simulate a missing 'anthropic' package. The reload approach has ordering and caching side effects that made the test unreliable.",
+      "resolution": "Dropped the reload. The lazy import is inside __init__, so monkeypatching sys.modules['anthropic'] = None is sufficient — ClaudeAdapter() will hit the ImportError path on the next instantiation.",
+      "rule": "When testing lazy imports, monkeypatch sys.modules without reloading the module."
+    },
+    {
+      "date": "2026-02-24",
+      "phase": "1",
+      "category": "design",
+      "lesson": "Optional SDK dependencies need an injected-client testing seam",
+      "context": "ClaudeAdapter and GeminiAdapter wrap optional SDKs (anthropic, google-generativeai). Testing them without live credentials or complex mocking required a way to inject a pre-built client.",
+      "resolution": "Added _client / _model_instance constructor parameters. When not None, the adapter skips the SDK import entirely. Tests pass a MagicMock; production code uses the real SDK client.",
+      "rule": "Any class wrapping an external SDK should accept an optional pre-built client parameter for testing seam injection."
+    },
+    {
+      "date": "2026-02-24",
+      "phase": "1",
+      "category": "design",
+      "lesson": "LLM output format must tolerate separator variants",
+      "context": "The Observer expected lines like '🔴 text' but LLMs often produce '🔴: text' or '🔴- text'. Tests that hardcoded exact format would miss real LLM outputs.",
+      "resolution": "The Observer parser strips leading ' :-' characters after the priority emoji with .lstrip(' :-'). Three separator styles are now handled without special-casing.",
+      "rule": "When parsing LLM free-text output, strip likely separator characters rather than requiring an exact format."
+    },
+    {
+      "date": "2026-02-24",
+      "phase": "1",
+      "category": "safety",
+      "lesson": "Reflector must guard against empty LLM responses overwriting the log",
+      "context": "The Reflector's job is to consolidate and overwrite the observation log. If the LLM returns an empty or unparseable response, a naive implementation would silently destroy all memory.",
+      "resolution": "reflect() returns False and leaves the log untouched when zero entries are parsed from a non-empty LLM response. Only overwrites when at least one valid entry is recovered.",
+      "rule": "Any destructive write that depends on LLM output needs a sanity check — refuse to proceed if the output is unparseable."
+    },
+    {
+      "date": "2026-02-24",
+      "phase": "1",
+      "category": "compat",
+      "lesson": "Gemini system_instruction is not universally supported",
+      "context": "google-generativeai's system_instruction parameter is not available on all Gemini model variants. Using it unconditionally causes runtime errors on some models.",
+      "resolution": "GeminiAdapter prepends the system prompt to the first user message content as a reliable fallback that works across all Gemini model variants.",
+      "rule": "When targeting multiple model variants of a provider, use the lowest-common-denominator API surface."
+    },
+    {
+      "date": "2026-02-23",
+      "phase": "0",
+      "category": "design",
+      "lesson": "relative field should be computed at build time, not stored",
+      "context": "The PRD's three-date model includes a 'relative' field (e.g. '3_days_ago'). If stored on disk, it becomes stale immediately and misleads the model on future runs.",
+      "resolution": "ObservationEntry.serialize() omits 'relative'. ContextBuilder calls entry.render() which computes it fresh from date.today(). The parser's regex accepts and ignores any stored 'relative:' field for forward compatibility.",
+      "rule": "Never persist derived temporal values; compute them at render time."
+    },
+    {
+      "date": "2026-02-23",
+      "phase": "0",
+      "category": "platform",
+      "lesson": "Path.mkdir(mode=0o700) does not guarantee 700 permissions",
+      "context": "The PRD requires memory/ to be created with 700 (owner-only) permissions. Path.mkdir(mode=0o700) applies the mode before the process umask, so the actual permissions depend on the user's umask setting.",
+      "resolution": "Call parent.chmod(0o700) explicitly after mkdir(). This overwrites whatever umask applied and guarantees the intended permissions.",
+      "rule": "Always call chmod() explicitly after mkdir() when a specific permission mode is required."
+    },
+    {
+      "date": "2026-02-23",
+      "phase": "0",
+      "category": "design",
+      "lesson": "Blank-line delimiter works for single-paragraph observations but breaks on multi-paragraph text",
+      "context": "The observation log uses re.split(r'\\n{2,}', ...) to split entries. This is clean and simple but means observation text cannot contain blank lines without being misread as two entries.",
+      "resolution": "Accepted as a Phase 0 constraint: observation text is single-paragraph. The Observer prompt instructs one sentence per entry. A richer delimiter (e.g. a sentinel line) can be introduced in Phase 3 if needed.",
+      "rule": "Document format constraints explicitly; defer delimiter complexity until there's a concrete use case that requires it."
+    },
+    {
+      "date": "2026-02-23",
+      "phase": "0",
+      "category": "infra",
+      "lesson": "SSH config pointed to a non-existent key file for github.com",
+      "context": "The project machine's ~/.ssh/config had IdentityFile ~/.ssh/tommy for github.com, but that key did not exist. The first git push attempt failed with 'no such identity'.",
+      "resolution": "Used GIT_SSH_COMMAND override to push with the existing id_gemini key for the first push; user subsequently fixed the SSH config to point to the correct key.",
+      "rule": "Verify SSH key paths resolve before relying on them for CI or remote pushes."
+    }
+  ]
+}

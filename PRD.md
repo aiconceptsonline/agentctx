@@ -1,6 +1,6 @@
 # PRD: agentctx
 
-**Status:** Living Document · **Last updated:** 2026-02-20
+**Status:** Living Document · **Last updated:** 2026-02-24
 **Owner:** Tommy
 
 > This document is updated continuously as context engineering research
@@ -441,24 +441,24 @@ All files are plain text or JSON. Git-trackable. No binary formats.
 
 ### Phase 0 — Foundation
 
-- [ ] Repo scaffold: `pyproject.toml`, `src/agentctx/`, tests, CI
-- [ ] `ObservationLog`: read, append, overwrite (Reflector), parse
+- [x] Repo scaffold: `pyproject.toml`, `src/agentctx/`, tests, CI
+- [x] `ObservationLog`: read, append, overwrite (Reflector), parse
       priority/dates
-- [ ] `AuditLog`: append-only JSONL, hash verification
-- [ ] `ContextBuilder`: assemble Block 1 + Block 2 into a single string
-- [ ] `RunState`: load/save JSON checkpoint, `complete()`,
+- [x] `AuditLog`: append-only JSONL, hash verification
+- [x] `ContextBuilder`: assemble Block 1 + Block 2 into a single string
+- [x] `RunState`: load/save JSON checkpoint, `complete()`,
       `completed_steps()`
-- [ ] File permission enforcement on `memory/` creation
+- [x] File permission enforcement on `memory/` creation
 
 ### Phase 1 — Observer + Reflector
 
-- [ ] `LLMAdapter` protocol + Claude and Gemini implementations
-- [ ] `Sanitizer`: strip injection patterns, wrap external content in
+- [x] `LLMAdapter` protocol + Claude and Gemini implementations
+- [x] `Sanitizer`: strip injection patterns, wrap external content in
       delimiters, enforce entry token budget
-- [ ] `Observer` agent: token-count trigger, compress messages →
+- [x] `Observer` agent: token-count trigger, compress messages →
       observations (sanitized)
-- [ ] `Reflector` agent: size trigger, restructure observation log
-- [ ] `ContextManager`: wires everything together, exposes public API,
+- [x] `Reflector` agent: size trigger, restructure observation log
+- [x] `ContextManager`: wires everything together, exposes public API,
       creates task anchor on init
 
 ### Phase 2 — Integration + Security Testing
@@ -502,7 +502,53 @@ All files are plain text or JSON. Git-trackable. No binary formats.
 ## 10. Research Changelog
 
 This section tracks significant research findings that changed the
-design. New entries go at the top.
+design, and implementation milestones. New entries go at the top.
+
+---
+
+### 2026-02-24 — Phase 1 shipped: Observer, Reflector, Sanitizer, adapters, ContextManager
+
+All Phase 1 checklist items complete. 171 tests, 93% coverage.
+
+Key implementation decisions:
+
+- **Lazy SDK imports with injected-client seam**: `ClaudeAdapter` and
+  `GeminiAdapter` import their SDKs inside `__init__` rather than at module
+  level. An optional `_client` / `_model_instance` parameter allows tests to
+  inject mocks without patching `sys.modules` or reloading modules.
+- **`agentctx.testing` module**: `FakeLLMAdapter` lives in
+  `src/agentctx/testing.py` rather than `tests/conftest.py`. This makes it
+  importable by downstream users writing their own tests, and avoids the
+  `ModuleNotFoundError` that arises from `from tests.conftest import …` when
+  the `tests/` directory has no `__init__.py`.
+- **Observer separator tolerance**: the LLM response parser strips leading
+  ` :-` characters after the priority emoji, handling `🔴: text`,
+  `🔴- text`, and `🔴 text` without requiring a strict format.
+- **Reflector safety guard**: `reflect()` returns `False` and leaves the log
+  untouched if the LLM produces zero parseable entries from a non-empty
+  response, preventing silent log destruction from a bad completion.
+- **Gemini system instruction fallback**: the Gemini adapter prepends the
+  system prompt to the first user message rather than using
+  `system_instruction=`, which is not supported on all Gemini models.
+
+---
+
+### 2026-02-23 — Phase 0 shipped: foundation data layer
+
+All Phase 0 checklist items complete. 81 tests, 94% coverage.
+
+Key implementation decisions:
+
+- **`relative` field computed at build time, not stored**: observations store
+  only `observed_on` and `event_date`; `ContextBuilder` computes the
+  human-readable lag fresh each time it renders Block 1. Stored `relative:`
+  fields in existing files are silently ignored by the parser.
+- **File permissions via explicit `chmod`**: `Path.mkdir(mode=0o700)` is
+  masked by the process umask; `parent.chmod(0o700)` must be called
+  separately after creation to guarantee `700` on the `memory/` directory.
+- **Blank-line entry delimiter**: observation entries are separated by two or
+  more newlines (`\n{2,}`). Single newlines within an entry are preserved as
+  multi-line text. Entries with malformed headers are silently skipped.
 
 ---
 

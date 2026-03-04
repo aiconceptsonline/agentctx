@@ -1,0 +1,58 @@
+name: Research Watch
+
+on:
+  schedule:
+    # Every Monday at 07:00 UTC
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+    inputs:
+      min_score:
+        description: "Minimum relevance score (1–5)"
+        required: false
+        default: "4"
+      dry_run:
+        description: "Dry run (no file writes)"
+        required: false
+        default: "false"
+        type: boolean
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[claude,research]"
+
+      - name: Run research watch
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          MIN_SCORE="${{ github.event.inputs.min_score || '4' }}"
+          DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
+          ARGS="--min-score $MIN_SCORE --verbose"
+          if [ "$DRY_RUN" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          python scripts/research_watch.py $ARGS
+
+      - name: Commit updated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add PRD.md lessons-learned.json research/seen.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: weekly research digest $(date -u +%Y-%m-%d)"
+            git push
+          fi

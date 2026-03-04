@@ -133,7 +133,7 @@ turn.
 
 ### 4.3 Observer Agent
 
-Fires automatically when unobserved messages exceed a configurable
+Runs automatically when unobserved messages exceed a configurable
 token threshold (default: 30K).
 
 - Reads new messages since the last observation pass
@@ -144,7 +144,7 @@ token threshold (default: 30K).
 
 ### 4.4 Reflector Agent
 
-Fires when the observation log exceeds a configurable size (default:
+Runs when the observation log exceeds a configurable size (default:
 40K tokens).
 
 - Reads the full observation log

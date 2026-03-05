@@ -10,7 +10,7 @@ Usage (manual):
     pip install agentctx[claude,research]
     python scripts/research_watch.py
     python scripts/research_watch.py --dry-run
-    python scripts/research_watch.py --min-score 3 --model claude-sonnet-4-6
+    python scripts/research_watch.py --min-score 3 --max-age-days 14
 
 Designed to run as a weekly GitHub Actions workflow. All state is stored in
 research/seen.json so successive runs don't re-process old items.
@@ -18,9 +18,14 @@ research/seen.json so successive runs don't re-process old items.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
-from datetime import date, timezone, datetime
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import date, timedelta, timezone, datetime
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 # Resolve repo root regardless of where the script is invoked from
@@ -48,6 +53,33 @@ def _make_adapter(model: str):
     return ClaudeAdapter(model=model)
 
 
+def _parse_dt(s: str) -> datetime | None:
+    """Parse an RSS/Atom date string into a timezone-aware datetime."""
+    if not s:
+        return None
+    # ISO 8601 (arxiv: "2026-03-03T00:00:00Z")
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except ValueError:
+        pass
+    # RFC 2822 (RSS: "Mon, 03 Mar 2026 00:00:00 +0000")
+    try:
+        return parsedate_to_datetime(s)
+    except Exception:
+        pass
+    return None
+
+
+def _is_recent(item: ResearchItem, cutoff: datetime) -> bool:
+    """Return True if the item was published on or after cutoff."""
+    dt = _parse_dt(item.published)
+    if dt is None:
+        return True  # can't parse date → include it
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt >= cutoff
+
+
 # ── Sources ───────────────────────────────────────────────────────────────────
 
 ARXIV_FEEDS = [
@@ -61,9 +93,23 @@ ARXIV_FEEDS = [
     "https://export.arxiv.org/api/query?search_query=all:memory+poisoning+LLM+agent&sortBy=submittedDate&sortOrder=descending&max_results=5",
 ]
 
+ARXIV_CATEGORY_FEEDS = [
+    "https://rss.arxiv.org/rss/cs.CL",   # Computation and Language
+    "https://rss.arxiv.org/rss/cs.CV",   # Computer Vision
+    "https://rss.arxiv.org/rss/cs.LG",   # Machine Learning
+]
+
 RSS_FEEDS = [
     "https://www.anthropic.com/news/rss.xml",
+    "https://openai.com/blog/rss",
+    "https://bair.berkeley.edu/blog/feed.xml",
+    "https://research.google/blog/rss",
+    "https://distill.pub/rss.xml",
     "https://martinfowler.com/feed.atom",
+    "https://marktechpost.com/feed/",
+    "https://www.artificialintelligence-news.com/feed/rss/",
+    "https://machinelearningmastery.com/blog/feed/",
+    "https://magazine.sebastianraschka.com/feed",
     "https://unit42.paloaltonetworks.com/rss/",
     "https://feeds.feedburner.com/TheHackersNews",
 ]
@@ -71,6 +117,7 @@ RSS_FEEDS = [
 SEEN_PATH = _REPO_ROOT / "research" / "seen.json"
 PRD_PATH = _REPO_ROOT / "PRD.md"
 LESSONS_PATH = _REPO_ROOT / "lessons-learned.json"
+METRICS_LOG_PATH = _REPO_ROOT / "research" / "metrics.jsonl"
 
 
 # ── Main pipeline ─────────────────────────────────────────────────────────────
@@ -80,56 +127,81 @@ def run(
     dry_run: bool = False,
     eval_model: str = "claude-haiku-4-5-20251001",
     extract_model: str = "claude-sonnet-4-6",
+    max_age_days: int = 7,
+    workers: int = 4,
     verbose: bool = False,
 ) -> dict:
     """Run the research watch pipeline and return a summary dict."""
+    pipeline_start = time.monotonic()
+
     eval_llm = _make_adapter(eval_model)
     extract_llm = _make_adapter(extract_model)
-
     seen = load_seen(SEEN_PATH)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=max_age_days)
 
-    # Fetch all feeds
+    # ── Fetch ──────────────────────────────────────────────────────────────
+    fetch_start = time.monotonic()
     all_items: list[ResearchItem] = []
-    for url in ARXIV_FEEDS + RSS_FEEDS:
+    for url in ARXIV_FEEDS + ARXIV_CATEGORY_FEEDS + RSS_FEEDS:
         try:
             items = fetch_feed(url)
             all_items.extend(items)
             if verbose:
-                print(f"  fetched {len(items):>3} items from {url[:60]}")
+                print(f"  fetched {len(items):>3} items from {url[:65]}")
         except Exception as exc:
-            print(f"  [warn] fetch failed for {url[:60]}: {exc}", file=sys.stderr)
+            print(f"  [warn] fetch failed for {url[:65]}: {exc}", file=sys.stderr)
 
-    # Deduplicate and filter seen
-    new_items: list[ResearchItem] = []
+    fetch_secs = time.monotonic() - fetch_start
+
+    # ── Filter: seen + date window ─────────────────────────────────────────
+    recent_unseen: list[ResearchItem] = []
     for item in all_items:
         key = item_key(item)
-        if key not in seen:
-            new_items.append(item)
+        if key not in seen and _is_recent(item, cutoff):
+            recent_unseen.append(item)
 
-    # Remove duplicates within this batch (same key from multiple feeds)
+    # Deduplicate within this batch
     seen_keys: set[str] = set()
     deduped: list[ResearchItem] = []
-    for item in new_items:
+    for item in recent_unseen:
         k = item_key(item)
         if k not in seen_keys:
             seen_keys.add(k)
             deduped.append(item)
 
-    print(f"Found {len(deduped)} new items (of {len(all_items)} fetched)")
+    too_old = sum(1 for i in all_items if item_key(i) not in seen and not _is_recent(i, cutoff))
+    print(
+        f"Fetched {len(all_items)} items — "
+        f"{len(deduped)} new within {max_age_days}d window "
+        f"({too_old} skipped as older than {max_age_days}d)"
+    )
 
-    # Evaluate relevance
+    # ── Evaluate relevance (concurrent) ────────────────────────────────────
+    eval_start = time.monotonic()
+    seen_lock = threading.Lock()
     relevant: list[tuple[ResearchItem, int, str]] = []
-    for item in deduped:
+    relevant_lock = threading.Lock()
+
+    def _eval_one(item: ResearchItem):
         result = evaluate_item(eval_llm, item)
-        seen.add(item_key(item))
+        with seen_lock:
+            seen.add(item_key(item))
         if verbose:
             print(f"  [{result.score}/5] {item.title[:70]}")
         if result.score >= min_score:
-            relevant.append((item, result.score, result.reason))
+            with relevant_lock:
+                relevant.append((item, result.score, result.reason))
 
-    print(f"{len(relevant)} items scored ≥ {min_score}")
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = [pool.submit(_eval_one, item) for item in deduped]
+        for f in as_completed(futures):
+            f.result()  # re-raise any exceptions
 
-    # Extract findings from relevant items
+    eval_secs = time.monotonic() - eval_start
+    print(f"{len(relevant)} items scored ≥ {min_score}  (eval took {eval_secs:.0f}s)")
+
+    # ── Extract findings from relevant items ───────────────────────────────
+    extract_start = time.monotonic()
     incorporated: list[tuple[ResearchItem, object]] = []
     all_lessons: list[dict] = []
     for item, score, reason in relevant:
@@ -139,7 +211,9 @@ def run(
         if verbose:
             print(f"  extracted: {item.title[:60]}")
 
-    # Update files
+    extract_secs = time.monotonic() - extract_start
+
+    # ── Write files ────────────────────────────────────────────────────────
     prd_updated = False
     lessons_updated = False
     today = date.today()
@@ -150,16 +224,36 @@ def run(
             prd_updated = update_prd(PRD_PATH, today, incorporated)
             lessons_updated = update_lessons(LESSONS_PATH, today, all_lessons)
 
+    total_secs = time.monotonic() - pipeline_start
+
     summary = {
         "date": str(today),
         "fetched": len(all_items),
-        "new": len(deduped),
+        "new_in_window": len(deduped),
+        "skipped_too_old": too_old,
         "relevant": len(relevant),
         "incorporated": len(incorporated),
         "prd_updated": prd_updated,
         "lessons_updated": lessons_updated,
         "dry_run": dry_run,
+        "timing_secs": {
+            "fetch": round(fetch_secs, 1),
+            "evaluate": round(eval_secs, 1),
+            "extract": round(extract_secs, 1),
+            "total": round(total_secs, 1),
+        },
+        "relevant_items": [
+            {"title": item.title, "url": item.url, "score": score, "reason": reason}
+            for item, score, reason in relevant
+        ],
     }
+
+    # Append to metrics log
+    if not dry_run:
+        METRICS_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with METRICS_LOG_PATH.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(summary) + "\n")
+
     return summary
 
 
@@ -171,6 +265,8 @@ def main() -> None:
     parser.add_argument("--min-score", type=int, default=4, metavar="N", help="Minimum relevance score to incorporate (1-5, default: 4)")
     parser.add_argument("--eval-model", default="claude-haiku-4-5-20251001", metavar="MODEL", help="Claude model for relevance scoring")
     parser.add_argument("--extract-model", default="claude-sonnet-4-6", metavar="MODEL", help="Claude model for finding extraction")
+    parser.add_argument("--max-age-days", type=int, default=7, metavar="N", help="Only evaluate items published within this many days (default: 7)")
+    parser.add_argument("--workers", type=int, default=4, metavar="N", help="Concurrent evaluation workers (default: 4)")
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
 
@@ -179,20 +275,27 @@ def main() -> None:
         dry_run=args.dry_run,
         eval_model=args.eval_model,
         extract_model=args.extract_model,
+        max_age_days=args.max_age_days,
+        workers=args.workers,
         verbose=args.verbose,
     )
 
-    print("\nSummary:")
-    for k, v in summary.items():
-        print(f"  {k}: {v}")
+    t = summary["timing_secs"]
+    print(f"\nTiming: fetch={t['fetch']}s  eval={t['evaluate']}s  extract={t['extract']}s  total={t['total']}s")
+
+    print("\nRelevant items found:")
+    if summary["relevant_items"]:
+        for item in summary["relevant_items"]:
+            print(f"  [{item['score']}/5] {item['title'][:70]}")
+            print(f"         {item['url']}")
+    else:
+        print("  (none)")
+
+    print(f"\nSummary: {summary['new_in_window']} new items evaluated, "
+          f"{summary['relevant']} relevant, {summary['incorporated']} incorporated")
 
     if summary["incorporated"] > 0 and not summary["dry_run"]:
-        print("\nFiles updated:")
-        if summary["prd_updated"]:
-            print("  PRD.md")
-        if summary["lessons_updated"]:
-            print("  lessons-learned.json")
-        print("  research/seen.json")
+        print("Files updated: PRD.md, lessons-learned.json, research/seen.json, research/metrics.jsonl")
 
 
 if __name__ == "__main__":

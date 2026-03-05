@@ -56,7 +56,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "chore: weekly research digest $(date -u +%Y-%m-%d)"
             git pull --rebase
+            git commit -m "chore: weekly research digest $(date -u +%Y-%m-%d)"
             git push
           fi

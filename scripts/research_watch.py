@@ -80,6 +80,36 @@ def _is_recent(item: ResearchItem, cutoff: datetime) -> bool:
     return dt >= cutoff
 
 
+# Keywords that must appear (case-insensitive) in title OR summary for an item
+# to pass pre-screening. This runs before any LLM call — zero token cost.
+# Tune this list to widen or narrow the pre-filter.
+KEYWORD_FILTER = [
+    # Agents / agentic systems
+    "agent", "agentic", "multi-agent",
+    # Context & memory
+    "context window", "context engineering", "context management",
+    "long context", "memory", "episodic", "working memory",
+    # Retrieval-augmented
+    "rag", "retrieval-augmented", "retrieval augmented",
+    # Security / adversarial
+    "prompt injection", "jailbreak", "adversarial prompt",
+    "backdoor", "memory poisoning",
+    # Tool / function use
+    "tool use", "tool call", "function call", "tool-augmented",
+    # Reasoning & planning
+    "chain-of-thought", "chain of thought", "reflection",
+    # Specific to LLM orchestration
+    "llm agent", "ai agent", "language model agent",
+    "orchestrat", "multi-step",
+]
+
+
+def _keyword_match(item: ResearchItem) -> bool:
+    """Return True if any keyword appears in the item's title or summary."""
+    text = (item.title + " " + item.summary).lower()
+    return any(kw in text for kw in KEYWORD_FILTER)
+
+
 # ── Sources ───────────────────────────────────────────────────────────────────
 
 ARXIV_FEEDS = [
@@ -128,6 +158,7 @@ def run(
     eval_model: str = "claude-haiku-4-5-20251001",
     extract_model: str = "claude-sonnet-4-6",
     max_age_days: int = 7,
+    max_per_feed: int = 25,
     workers: int = 4,
     verbose: bool = False,
 ) -> dict:
@@ -139,12 +170,12 @@ def run(
     seen = load_seen(SEEN_PATH)
     cutoff = datetime.now(timezone.utc) - timedelta(days=max_age_days)
 
-    # ── Fetch ──────────────────────────────────────────────────────────────
+    # ── Fetch (with per-feed cap) ──────────────────────────────────────────
     fetch_start = time.monotonic()
     all_items: list[ResearchItem] = []
     for url in ARXIV_FEEDS + ARXIV_CATEGORY_FEEDS + RSS_FEEDS:
         try:
-            items = fetch_feed(url)
+            items = fetch_feed(url)[:max_per_feed]
             all_items.extend(items)
             if verbose:
                 print(f"  fetched {len(items):>3} items from {url[:65]}")
@@ -153,27 +184,28 @@ def run(
 
     fetch_secs = time.monotonic() - fetch_start
 
-    # ── Filter: seen + date window ─────────────────────────────────────────
-    recent_unseen: list[ResearchItem] = []
+    # ── Filter 1: seen + date window ───────────────────────────────────────
+    after_date: list[ResearchItem] = []
+    seen_keys_batch: set[str] = set()
+    too_old = 0
     for item in all_items:
         key = item_key(item)
-        if key not in seen and _is_recent(item, cutoff):
-            recent_unseen.append(item)
+        if key in seen or key in seen_keys_batch:
+            continue
+        if not _is_recent(item, cutoff):
+            too_old += 1
+            continue
+        seen_keys_batch.add(key)
+        after_date.append(item)
 
-    # Deduplicate within this batch
-    seen_keys: set[str] = set()
-    deduped: list[ResearchItem] = []
-    for item in recent_unseen:
-        k = item_key(item)
-        if k not in seen_keys:
-            seen_keys.add(k)
-            deduped.append(item)
+    # ── Filter 2: keyword pre-screen (zero LLM cost) ──────────────────────
+    deduped = [item for item in after_date if _keyword_match(item)]
+    keyword_dropped = len(after_date) - len(deduped)
 
-    too_old = sum(1 for i in all_items if item_key(i) not in seen and not _is_recent(i, cutoff))
     print(
         f"Fetched {len(all_items)} items — "
-        f"{len(deduped)} new within {max_age_days}d window "
-        f"({too_old} skipped as older than {max_age_days}d)"
+        f"{too_old} too old, {keyword_dropped} no keyword match → "
+        f"{len(deduped)} queued for LLM evaluation"
     )
 
     # ── Evaluate relevance (concurrent) ────────────────────────────────────
@@ -229,8 +261,9 @@ def run(
     summary = {
         "date": str(today),
         "fetched": len(all_items),
-        "new_in_window": len(deduped),
         "skipped_too_old": too_old,
+        "skipped_no_keyword": keyword_dropped,
+        "evaluated": len(deduped),
         "relevant": len(relevant),
         "incorporated": len(incorporated),
         "prd_updated": prd_updated,
@@ -266,6 +299,7 @@ def main() -> None:
     parser.add_argument("--eval-model", default="claude-haiku-4-5-20251001", metavar="MODEL", help="Claude model for relevance scoring")
     parser.add_argument("--extract-model", default="claude-sonnet-4-6", metavar="MODEL", help="Claude model for finding extraction")
     parser.add_argument("--max-age-days", type=int, default=7, metavar="N", help="Only evaluate items published within this many days (default: 7)")
+    parser.add_argument("--max-per-feed", type=int, default=25, metavar="N", help="Cap items taken from each feed before filtering (default: 25)")
     parser.add_argument("--workers", type=int, default=4, metavar="N", help="Concurrent evaluation workers (default: 4)")
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
@@ -276,6 +310,7 @@ def main() -> None:
         eval_model=args.eval_model,
         extract_model=args.extract_model,
         max_age_days=args.max_age_days,
+        max_per_feed=args.max_per_feed,
         workers=args.workers,
         verbose=args.verbose,
     )
@@ -291,7 +326,7 @@ def main() -> None:
     else:
         print("  (none)")
 
-    print(f"\nSummary: {summary['new_in_window']} new items evaluated, "
+    print(f"\nSummary: {summary['evaluated']} items evaluated, "
           f"{summary['relevant']} relevant, {summary['incorporated']} incorporated")
 
     if summary["incorporated"] > 0 and not summary["dry_run"]:

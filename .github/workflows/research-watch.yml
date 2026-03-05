@@ -33,6 +33,7 @@ jobs:
           namespace: admin
           method: jwt
           role: github-agentctx-research
+          jwtGithubAudience: https://vault.hashicorp.com
           secrets: |
             secret/data/anthropic/api-key value | ANTHROPIC_API_KEY
 

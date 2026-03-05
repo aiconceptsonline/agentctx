@@ -18,6 +18,7 @@ research/seen.json so successive runs don't re-process old items.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from datetime import date, timezone, datetime
 from pathlib import Path
@@ -26,12 +27,26 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(_REPO_ROOT / "src"))
 
-from agentctx.adapters.claude import ClaudeAdapter
 from agentctx.research.fetcher import ResearchItem, fetch_feed, item_key
 from agentctx.research.evaluator import evaluate_item, extract_findings
 from agentctx.research.updater import (
     load_seen, save_seen, update_prd, update_lessons,
 )
+
+
+def _make_adapter(model: str):
+    """Return the best available LLM adapter based on environment variables.
+
+    Priority:
+    1. CLAUDE_CODE_OAUTH_TOKEN  → ClaudeCLIAdapter (no API credits needed)
+    2. ANTHROPIC_API_KEY        → ClaudeAdapter (direct SDK)
+    """
+    if os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
+        from agentctx.adapters.claude_cli import ClaudeCLIAdapter
+        return ClaudeCLIAdapter(model=model)
+    from agentctx.adapters.claude import ClaudeAdapter
+    return ClaudeAdapter(model=model)
+
 
 # ── Sources ───────────────────────────────────────────────────────────────────
 
@@ -68,8 +83,8 @@ def run(
     verbose: bool = False,
 ) -> dict:
     """Run the research watch pipeline and return a summary dict."""
-    eval_llm = ClaudeAdapter(model=eval_model)
-    extract_llm = ClaudeAdapter(model=extract_model)
+    eval_llm = _make_adapter(eval_model)
+    extract_llm = _make_adapter(extract_model)
 
     seen = load_seen(SEEN_PATH)
 

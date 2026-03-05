@@ -13,7 +13,7 @@ on:
       dry_run:
         description: "Dry run (no file writes)"
         required: false
-        default: "false"
+        default: false
         type: boolean
 
 jobs:
@@ -21,9 +21,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write   # required to request GitHub OIDC token for Vault JWT auth
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Fetch secrets from Vault
+        uses: hashicorp/vault-action@v3
+        with:
+          url: https://tls-hashi-kv-public-vault-1caeb7d2.31341725.z1.hashicorp.cloud:8200
+          namespace: admin
+          method: jwt
+          role: github-agentctx-research
+          secrets: |
+            secret/data/anthropic/api-key value | ANTHROPIC_API_KEY
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -35,7 +46,7 @@ jobs:
 
       - name: Run research watch
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ env.ANTHROPIC_API_KEY }}
         run: |
           MIN_SCORE="${{ github.event.inputs.min_score || '4' }}"
           DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"

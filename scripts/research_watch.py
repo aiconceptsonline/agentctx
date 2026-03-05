@@ -80,34 +80,35 @@ def _is_recent(item: ResearchItem, cutoff: datetime) -> bool:
     return dt >= cutoff
 
 
-# Keywords that must appear (case-insensitive) in title OR summary for an item
-# to pass pre-screening. This runs before any LLM call — zero token cost.
-# Tune this list to widen or narrow the pre-filter.
-KEYWORD_FILTER = [
-    # Agents / agentic systems
-    "agent", "agentic", "multi-agent",
-    # Context & memory
-    "context window", "context engineering", "context management",
-    "long context", "memory", "episodic", "working memory",
-    # Retrieval-augmented
-    "rag", "retrieval-augmented", "retrieval augmented",
-    # Security / adversarial
-    "prompt injection", "jailbreak", "adversarial prompt",
-    "backdoor", "memory poisoning",
+# Keywords matched against the TITLE only (not summary).
+# Title-matching is a much stronger signal than summary-matching —
+# keep this list specific to avoid catching tangentially-related papers.
+# Tune here to widen or narrow the pre-filter.
+TITLE_KEYWORDS = [
+    # LLM agents (specific compound phrases)
+    "llm agent", "ai agent", "language model agent", "agentic", "multi-agent",
+    # Context / memory (specific to LLMs)
+    "context window", "context engineering", "context management", "long context",
+    "memory augmented", "memory-augmented",
+    # Security
+    "prompt injection", "jailbreak", "memory poisoning", "backdoor attack",
+    # Retrieval-augmented generation
+    "retrieval-augmented", "retrieval augmented generation",
     # Tool / function use
-    "tool use", "tool call", "function call", "tool-augmented",
-    # Reasoning & planning
-    "chain-of-thought", "chain of thought", "reflection",
-    # Specific to LLM orchestration
-    "llm agent", "ai agent", "language model agent",
-    "orchestrat", "multi-step",
+    "tool use", "tool-augmented", "function calling",
+    # Reasoning
+    "chain-of-thought",
+    # General LLM (broad but in a title = stronger signal)
+    "large language model", "llm",
+    # Industry / model releases
+    "claude", "gpt-4", "gpt-5", "gemini", "anthropic", "openai",
 ]
 
 
 def _keyword_match(item: ResearchItem) -> bool:
-    """Return True if any keyword appears in the item's title or summary."""
-    text = (item.title + " " + item.summary).lower()
-    return any(kw in text for kw in KEYWORD_FILTER)
+    """Return True if any keyword appears in the item's TITLE (not summary)."""
+    title = item.title.lower()
+    return any(kw in title for kw in TITLE_KEYWORDS)
 
 
 # ── Sources ───────────────────────────────────────────────────────────────────
@@ -158,7 +159,7 @@ def run(
     eval_model: str = "claude-haiku-4-5-20251001",
     extract_model: str = "claude-sonnet-4-6",
     max_age_days: int = 7,
-    max_per_feed: int = 25,
+    max_per_feed: int = 10,
     workers: int = 4,
     verbose: bool = False,
 ) -> dict:
@@ -299,7 +300,7 @@ def main() -> None:
     parser.add_argument("--eval-model", default="claude-haiku-4-5-20251001", metavar="MODEL", help="Claude model for relevance scoring")
     parser.add_argument("--extract-model", default="claude-sonnet-4-6", metavar="MODEL", help="Claude model for finding extraction")
     parser.add_argument("--max-age-days", type=int, default=7, metavar="N", help="Only evaluate items published within this many days (default: 7)")
-    parser.add_argument("--max-per-feed", type=int, default=25, metavar="N", help="Cap items taken from each feed before filtering (default: 25)")
+    parser.add_argument("--max-per-feed", type=int, default=10, metavar="N", help="Cap items taken from each feed before filtering (default: 10)")
     parser.add_argument("--workers", type=int, default=4, metavar="N", help="Concurrent evaluation workers (default: 4)")
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()

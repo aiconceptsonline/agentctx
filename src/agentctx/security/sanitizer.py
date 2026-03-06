@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from enum import Enum
 
 # (pattern, flags) pairs — order matters; more specific patterns first
 _INJECTION_PATTERNS: list[tuple[str, int]] = [
@@ -40,6 +41,22 @@ _COMPILED = [(re.compile(p, f), p) for p, f in _INJECTION_PATTERNS]
 DEFAULT_MAX_ENTRY_CHARS = 2_000
 
 
+class TrustTier(Enum):
+    """Trust tiers for spotlighting external content in prompts.
+
+    TRUSTED     — content already under the developer's control (e.g. system prompt).
+                  No injection stripping is applied.
+    SEMI_TRUSTED — partially controlled content (e.g. tool outputs).
+                  Injection stripping is applied.
+    UNTRUSTED   — fully external content (e.g. web pages, user documents).
+                  Injection stripping is applied.
+    """
+
+    TRUSTED = "trusted"
+    SEMI_TRUSTED = "semi_trusted"
+    UNTRUSTED = "untrusted"
+
+
 @dataclass
 class SanitizeResult:
     text: str
@@ -69,8 +86,25 @@ class Sanitizer:
 
         return SanitizeResult(text=cleaned, was_truncated=truncated, injection_count=count)
 
+    def spotlight(self, content: str, tier: TrustTier) -> str:
+        """Wrap content in tier-specific XML tags for spotlighting.
+
+        TRUSTED content is wrapped as-is (no injection stripping).
+        SEMI_TRUSTED and UNTRUSTED content have injections stripped first.
+        """
+        if tier is TrustTier.TRUSTED:
+            body = content.strip()
+        else:
+            body, _ = self._strip_injections(content)
+        tag = tier.value
+        return f"<{tag}>\n{body}\n</{tag}>"
+
     def wrap_external(self, content: str) -> str:
-        """Wrap untrusted external content in delimiters after stripping injections."""
+        """Wrap untrusted external content in delimiters after stripping injections.
+
+        Preserved for backward compatibility. Equivalent to spotlight(content, TrustTier.UNTRUSTED)
+        but uses the legacy <external_content> tag.
+        """
         cleaned, _ = self._strip_injections(content)
         return f"<external_content>\n{cleaned.strip()}\n</external_content>"
 

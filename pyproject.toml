@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "agentctx"
 dynamic = ["version"]
 description = "Multi-agent context and memory management library"
-readme = "PRD.md"
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentctx"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Multi-agent context and memory management library"
 readme = "PRD.md"
 requires-python = ">=3.11"
@@ -20,6 +20,9 @@ dev = [
     "pytest-cov>=6.0",
     "feedparser>=6.0",
 ]
+
+[tool.hatch.version]
+path = "src/agentctx/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentctx"]

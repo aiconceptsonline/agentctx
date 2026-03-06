@@ -1,3 +1,4 @@
+from agentctx._version import __version__
 from agentctx.config import AgentCtxConfig
 from agentctx.context_manager import ContextManager
 from agentctx.exceptions import AgentCtxError, ContextDriftWarning, TamperDetectedError
@@ -12,6 +13,7 @@ from agentctx.session.context_builder import ContextBuilder
 from agentctx.session.run_state import RunState, StepRecord
 
 __all__ = [
+    "__version__",
     "AgentCtxConfig",
     "AgentCtxError",
     "Anchor",

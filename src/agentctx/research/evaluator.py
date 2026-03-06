@@ -87,9 +87,16 @@ def extract_findings(llm: LLMAdapter, item: ResearchItem) -> ExtractionResult:
 
 # ── Internal parsers ──────────────────────────────────────────────────────────
 
+def _extract_json(raw: str) -> str:
+    """Return the first {...} JSON object found in raw, or raw itself."""
+    import re
+    m = re.search(r"\{.*\}", raw, re.DOTALL)
+    return m.group(0) if m else raw.strip()
+
+
 def _parse_relevance(raw: str) -> RelevanceResult:
     try:
-        data = json.loads(raw.strip())
+        data = json.loads(_extract_json(raw))
         return RelevanceResult(
             score=max(1, min(5, int(data["score"]))),
             reason=str(data.get("reason", "")),
@@ -101,7 +108,7 @@ def _parse_relevance(raw: str) -> RelevanceResult:
 
 def _parse_extraction(raw: str) -> ExtractionResult:
     try:
-        data = json.loads(raw.strip())
+        data = json.loads(_extract_json(raw))
         return ExtractionResult(
             key_findings=list(data.get("key_findings", [])),
             agentctx_implications=list(data.get("agentctx_implications", [])),

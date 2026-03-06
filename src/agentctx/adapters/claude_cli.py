@@ -29,14 +29,15 @@ class ClaudeCLIAdapter:
 
         prompt = "\n\n".join(parts)
 
-        cmd = ["claude", "-p", prompt]
+        cmd = ["claude", "-p", "--dangerously-skip-permissions", prompt]
         if self._model:
             cmd.extend(["--model", self._model])
 
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
         if result.returncode != 0:
+            detail = (result.stderr or result.stdout or "(no output)")[:400]
             raise RuntimeError(
-                f"claude CLI exited {result.returncode}: {result.stderr[:300]}"
+                f"claude CLI exited {result.returncode}: {detail}"
             )
 
         return result.stdout.strip()

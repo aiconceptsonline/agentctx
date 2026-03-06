@@ -215,8 +215,17 @@ def run(
     relevant: list[tuple[ResearchItem, int, str]] = []
     relevant_lock = threading.Lock()
 
+    eval_errors = 0
+
     def _eval_one(item: ResearchItem):
-        result = evaluate_item(eval_llm, item)
+        nonlocal eval_errors
+        try:
+            result = evaluate_item(eval_llm, item)
+        except Exception as exc:
+            print(f"  [warn] eval failed for {item.title[:60]!r}: {exc}", file=sys.stderr)
+            with seen_lock:
+                eval_errors += 1
+            return
         with seen_lock:
             seen.add(item_key(item))
         if verbose:
@@ -228,10 +237,11 @@ def run(
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(_eval_one, item) for item in deduped]
         for f in as_completed(futures):
-            f.result()  # re-raise any exceptions
+            f.result()  # propagate unexpected non-eval exceptions only
 
     eval_secs = time.monotonic() - eval_start
-    print(f"{len(relevant)} items scored ≥ {min_score}  (eval took {eval_secs:.0f}s)")
+    err_note = f", {eval_errors} eval errors" if eval_errors else ""
+    print(f"{len(relevant)} items scored ≥ {min_score}  (eval took {eval_secs:.0f}s{err_note})")
 
     # ── Extract findings from relevant items ───────────────────────────────
     extract_start = time.monotonic()
@@ -265,6 +275,7 @@ def run(
         "skipped_too_old": too_old,
         "skipped_no_keyword": keyword_dropped,
         "evaluated": len(deduped),
+        "eval_errors": eval_errors,
         "relevant": len(relevant),
         "incorporated": len(incorporated),
         "prd_updated": prd_updated,

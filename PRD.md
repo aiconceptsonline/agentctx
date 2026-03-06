@@ -506,6 +506,33 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-03-06 — Research digest (automated)
+
+Auto-incorporated 2 item(s) with relevance ≥ 4.
+
+**[Towards Multimodal Lifelong Understanding: A Dataset and Agentic Baseline](https://arxiv.org/abs/2603.05484v1)**
+
+The MM-Lifelong paper (arXiv 2603.05484, March 2026) introduces a 181-hour multimodal lifelong dataset and identifies two critical failure modes in long-horizon agentic reasoning: the Working Memory Bottleneck (context saturation in end-to-end MLLMs) and Global Localization Collapse (positional disorientation in agentic baselines over sparse timelines). The proposed Recursive Multimodal Agent (ReMA) resolves both via dynamic, recursive belief-state management. These findings validate agentctx's core memory and checkpointing primitives and provide concrete design targets: (1) recursive summarisation hooks in observational memory, (2) temporal anchor fields in run-state checkpoints, and (3) density-adaptive retention policies in the context engineering layer. This paper should be treated as a primary reference for §4 (Observational Memory) and §6 (Checkpointing) design decisions.
+
+- The Working Memory Bottleneck directly motivates agentctx's observational memory design: raw context must be compressed and summarised recursively rather than appended linearly, especially for long-running agents.
+- Global Localization Collapse is a checkpointing failure — agentctx's run-state checkpointing should store explicit temporal/positional anchors alongside state snapshots so agents can re-orient after resumption.
+- ReMA's recursive belief state update pattern is a strong prior for agentctx's context engineering API: expose a belief-state abstraction that agents update incrementally rather than reconstructing from full history.
+- The Day/Week/Month density tiers suggest agentctx should support configurable memory retention policies (e.g., high-fidelity recent window + compressed long-term summary) rather than a single eviction strategy.
+- Input sanitisation in agentctx should account for temporal sparsity: filtering or down-sampling dense input streams before they reach the context window prevents premature saturation.
+
+**[Fooling AI Agents: Web-Based Indirect Prompt Injection Observed in the Wild](https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/)**
+
+§10 Research Changelog — 2026-03-06: Unit 42 (Palo Alto Networks) published the first large-scale empirical study of indirect prompt injection (IDPI) observed in production AI agents, cataloguing 12 real-world attack patterns ranging from financial fraud to destructive filesystem commands. Key delivery vectors include CSS/font concealment, runtime Base64 decoding, and social-engineering jailbreak framing (present in 85.2% of cases). The study validates agentctx's existing input-sanitisation and context-engineering mandates and surfaces three concrete gaps: (1) recursive decoding of encoded payloads, (2) structural spotlighting of untrusted context zones, and (3) intent-drift detection via run-state checkpoint comparison. These gaps are now tracked as actionable items for the sanitisation, context-engineering, and checkpointing subsystems.
+
+- agentctx's input sanitisation layer must be extended to strip or flag visual-concealment vectors: zero-width/zero-font spans, off-screen CSS positioning, colour-matched text, invisible Unicode characters, and homoglyph substitutions before content reaches the LLM context.
+- Base64 and XML/SVG payloads that decode at runtime must be handled — sanitisation should recursively decode and inspect encoded blobs rather than passing them through opaque.
+- The context engineering layer should implement spotlighting by design: wrapping all externally-fetched content (web pages, tool outputs, retrieved documents) in a distinct XML-tagged zone so the model receives a structural signal that those tokens are untrusted.
+- Run state checkpointing should record a canonical 'intent fingerprint' derived from the original user goal; a post-step comparator can detect when an agent's next planned action diverges from that fingerprint, surfacing potential injection-driven hijacking.
+- Observational memory should log jailbreak-framing patterns ('developer mode', 'god mode', 'ignore previous instructions') as anomaly signals; repeated pattern matches across a session should escalate to a human-in-the-loop interrupt.
+- agentctx should expose a trust-tier API so integrators can tag context sources (system prompt = TRUSTED, web retrieval = UNTRUSTED, tool output = SEMI-TRUSTED) and apply differential sanitisation budgets accordingly.
+
+---
+
 ### 2026-02-24 — Phase 1 shipped: Observer, Reflector, Sanitizer, adapters, ContextManager
 
 All Phase 1 checklist items complete. 171 tests, 93% coverage.

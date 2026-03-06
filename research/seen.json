@@ -1,1 +1,23 @@
-[]
+[
+  "arxiv:2603.04408",
+  "arxiv:2603.04409",
+  "arxiv:2603.04412",
+  "arxiv:2603.04413",
+  "arxiv:2603.04428",
+  "arxiv:2603.04436",
+  "arxiv:2603.05471",
+  "arxiv:2603.05484",
+  "arxiv:2603.05485",
+  "arxiv:2603.05489",
+  "arxiv:2603.05494",
+  "arxiv:2603.05500",
+  "https://research.google/blog/teaching-llms-to-reason-like-bayesians/",
+  "https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/",
+  "https://unit42.paloaltonetworks.com/gemini-live-in-chrome-hijacking/",
+  "https://www.artificialintelligence-news.com/news/ai-agents-prefer-bitcoin-new-finance-architecture/",
+  "https://www.artificialintelligence-news.com/news/dyna-ai-series-a-agentic-ai-financial-services/",
+  "https://www.marktechpost.com/2026/03/04/how-to-build-an-evermem-style-persistent-ai-agent-os-with-hierarchical-memory-faiss-vector-retrieval-sqlite-storage-and-automated-memory-consolidation/",
+  "https://www.marktechpost.com/2026/03/04/langwatch-open-sources-the-missing-evaluation-layer-for-ai-agents-to-enable-end-to-end-tracing-simulation-and-systematic-testing/",
+  "https://www.marktechpost.com/2026/03/05/google-ai-releases-a-cli-tool-gws-for-workspace-apis-providing-a-unified-interface-for-humans-and-ai-agents/",
+  "https://www.marktechpost.com/2026/03/05/openai-releases-symphony-an-open-source-agentic-framework-for-orchestrating-autonomous-ai-agents-through-structured-scalable-implementation-runs/"
+]

@@ -3,6 +3,69 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-03-06",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Linear context accumulation causes Working Memory Bottleneck in long-horizon tasks",
+      "context": "End-to-end MLLMs evaluated on hour-to-month scale video degrade when their context windows saturate, because all observations are appended rather than summarised.",
+      "resolution": "ReMA iteratively updates a compact recursive belief state, discarding raw observations after integration.",
+      "rule": "agentctx observational memory MUST compress older observations into a rolling summary; never allow unbounded linear growth of the raw observation buffer."
+    },
+    {
+      "date": "2026-03-06",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Agents lose positional coherence on sparse long timelines without explicit anchoring",
+      "context": "Agentic baselines collapsed globally when navigating month-long sparse timelines because no positional state was maintained across steps.",
+      "resolution": "Checkpoints must include explicit temporal/positional anchors so agents can re-orient after any interruption or context reset.",
+      "rule": "agentctx run-state checkpoints MUST serialise a temporal anchor (e.g., step index, wall-clock timestamp, logical position) alongside task state; restoration logic must reload this anchor before resuming."
+    },
+    {
+      "date": "2026-03-06",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Memory architecture must be calibrated to context density, not just context length",
+      "context": "Day/Week/Month splits in MM-Lifelong expose qualitatively different failure modes depending on how densely events are packed in time, not just the total duration.",
+      "resolution": "Configurable retention policies (high-fidelity recent window + compressed long-term summary) rather than a single eviction strategy.",
+      "rule": "agentctx SHOULD expose a density-aware retention policy parameter so library users can tune memory fidelity to their agent's operational tempo."
+    },
+    {
+      "date": "2026-03-06",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Visual concealment of injected text is only one attack surface; plaintext injections account for 37.8% of real-world cases.",
+      "context": "Sanitisation logic that focuses exclusively on hidden-text heuristics (zero-font, off-screen) will miss the majority of injection attempts that embed malicious instructions in visible but contextually plausible prose.",
+      "resolution": "Supplement structural concealment detection with semantic anomaly detection — flag content that contains instruction-like imperative syntax ('ignore', 'instead', 'you are now') when sourced from untrusted zones.",
+      "rule": "Never treat sanitisation as purely a formatting problem; instruction-pattern matching on visible text is equally important."
+    },
+    {
+      "date": "2026-03-06",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Base64 and XML/SVG encapsulation allow payloads to bypass naive string-matching sanitisation.",
+      "context": "Attackers encode malicious prompts as Base64 strings that are decoded and injected into the DOM at runtime, making static pre-fetch scanning ineffective.",
+      "resolution": "agentctx's sanitisation pipeline should recursively decode all known encoding schemes (Base64, URL-encoding, HTML entities) and re-run the sanitisation pass on the decoded output before context assembly.",
+      "rule": "Sanitisation must be applied post-decoding, not pre-decoding."
+    },
+    {
+      "date": "2026-03-06",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Spotlighting — structurally tagging trusted vs. untrusted content in the context window — is the highest-leverage architectural mitigation.",
+      "context": "Without structural separation, the LLM cannot reliably distinguish system-level instructions from adversarially injected instructions embedded in retrieved web content.",
+      "resolution": "Enforce a mandatory trust-tier tagging scheme in agentctx's context engineering layer, wrapping all externally sourced content in clearly demarcated XML tags (e.g., <untrusted_web_content>) that are also referenced in the system prompt's meta-instructions.",
+      "rule": "Context assembly must always encode provenance; the model must never receive a flat, undifferentiated context window."
+    },
+    {
+      "date": "2026-03-06",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Run-state checkpointing provides a post-hoc mechanism to detect injection-driven goal hijacking.",
+      "context": "An agent that has been successfully injected will begin executing actions (donations, file deletions, phishing promotion) that deviate from the user's original intent, but no intermediate signal may surface this deviation.",
+      "resolution": "Encode the user's stated goal as an intent fingerprint at session start and compare each planned action against it at checkpoint boundaries; flag or block actions with low semantic similarity to the original goal.",
+      "rule": "Checkpoints should validate intent alignment, not just execution state."
+    },
+    {
       "date": "2026-02-24",
       "phase": "1",
       "category": "testing",

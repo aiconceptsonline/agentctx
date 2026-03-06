@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
 
     steps:
       - uses: actions/checkout@v4
@@ -47,6 +48,62 @@ jobs:
             ARGS="$ARGS --dry-run"
           fi
           python scripts/research_watch.py $ARGS
+
+      - name: Open GitHub issues for incorporated findings
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -f research/pending-issues.json ]; then
+            echo "No pending issues."
+            exit 0
+          fi
+          python3 - <<'PYEOF'
+          import json, subprocess, sys
+          from pathlib import Path
+
+          items = json.loads(Path("research/pending-issues.json").read_text())
+          if not items:
+              print("No incorporated items to open issues for.")
+              sys.exit(0)
+
+          for item in items:
+              implications = "\n".join(f"- {i}" for i in item["agentctx_implications"])
+              findings = "\n".join(f"- {f}" for f in item["key_findings"])
+              body = f"""\
+          ## Research finding
+
+          **Source:** [{item['title']}]({item['url']})
+          **Relevance score:** {item['score']}/5 — {item['reason']}
+
+          ## Key findings
+
+          {findings}
+
+          ## agentctx implications
+
+          {implications}
+
+          ## PRD entry
+
+          {item['prd_entry'] or '_No PRD entry extracted._'}
+
+          ---
+
+          @claude please review the implications above and implement any changes to agentctx that are clearly actionable. Use your judgment — skip anything speculative or already covered. Write tests for any new behaviour.
+          """
+              title = f"research: {item['title'][:72]}"
+              result = subprocess.run(
+                  ["gh", "issue", "create", "--title", title, "--body", body],
+                  capture_output=True, text=True,
+              )
+              if result.returncode == 0:
+                  print(f"Opened issue: {result.stdout.strip()}")
+              else:
+                  print(f"Failed: {result.stderr[:200]}", file=sys.stderr)
+
+          Path("research/pending-issues.json").unlink()
+          PYEOF
 
       - name: Commit updated files
         run: |

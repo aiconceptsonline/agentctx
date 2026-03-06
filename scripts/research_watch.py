@@ -149,6 +149,7 @@ SEEN_PATH = _REPO_ROOT / "research" / "seen.json"
 PRD_PATH = _REPO_ROOT / "PRD.md"
 LESSONS_PATH = _REPO_ROOT / "lessons-learned.json"
 METRICS_LOG_PATH = _REPO_ROOT / "research" / "metrics.jsonl"
+PENDING_ISSUES_PATH = _REPO_ROOT / "research" / "pending-issues.json"
 
 
 # ── Main pipeline ─────────────────────────────────────────────────────────────
@@ -298,6 +299,22 @@ def run(
         METRICS_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         with METRICS_LOG_PATH.open("a", encoding="utf-8") as f:
             f.write(json.dumps(summary) + "\n")
+
+    # Write pending issues for incorporated items (workflow creates GitHub issues from this)
+    if not dry_run and incorporated:
+        pending = []
+        for (item, score, reason), (_, ext) in zip(relevant, incorporated):
+            pending.append({
+                "title": item.title,
+                "url": item.url,
+                "score": score,
+                "reason": reason,
+                "key_findings": ext.key_findings,
+                "agentctx_implications": ext.agentctx_implications,
+                "prd_entry": ext.prd_entry,
+            })
+        PENDING_ISSUES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        PENDING_ISSUES_PATH.write_text(json.dumps(pending, indent=2), encoding="utf-8")
 
     return summary
 

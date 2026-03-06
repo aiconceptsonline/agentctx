@@ -7,6 +7,7 @@ from agentctx.memory.reflector import Reflector
 from agentctx.security.anchor import Anchor
 from agentctx.security.audit import AuditEntry, AuditLog
 from agentctx.security.sanitizer import SanitizeResult, Sanitizer
+from agentctx.reporter import report_issue
 from agentctx.session.context_builder import ContextBuilder
 from agentctx.session.run_state import RunState, StepRecord
 
@@ -24,6 +25,7 @@ __all__ = [
     "Observer",
     "Reflector",
     "RunState",
+    "report_issue",
     "SanitizeResult",
     "Sanitizer",
     "StepRecord",

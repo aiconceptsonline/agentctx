@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a new capability or improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case from your project's perspective.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed API / behaviour
+      description: Show the interface you'd want to call, even if pseudocode.
+      render: python
+
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: Subsystem
+      options:
+        - ContextManager
+        - Sanitizer / security
+        - ObservationLog / memory
+        - RunState / checkpointing
+        - Adapters (Claude, Gemini, OpenAI)
+        - Research pipeline
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

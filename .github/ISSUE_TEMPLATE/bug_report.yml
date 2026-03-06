@@ -1,0 +1,49 @@
+name: Bug report
+description: Something in agentctx isn't working correctly
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: agentctx version
+      placeholder: "0.1.2"
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you observe? Include the full traceback if there is one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: Smallest code snippet that triggers the issue.
+      render: python
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Which subsystem? (ContextManager, Sanitizer, RunState, research, adapters…)

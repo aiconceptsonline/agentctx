@@ -199,6 +199,22 @@ To upgrade, update the wheel URL in your `requirements.txt` and rebuild.
 
 ---
 
+## Using agentctx in your project
+
+### AGENTS.md template
+
+If you use AI coding agents (Claude Code, Cursor, Copilot, etc.), copy
+[`docs/AGENTS.template.md`](docs/AGENTS.template.md) into your project as `AGENTS.md`.
+Fill in the project-specific sections — agents will read it before touching your code.
+
+The template covers:
+- Project context and architecture
+- agentctx integration instructions (Python or TypeScript/sidecar)
+- Trust-tier guidance for your content types
+- Conventions and working instructions
+
+---
+
 ## Issues
 
 Found a bug or want a feature? [Open an issue](https://github.com/aiconceptsonline/agentctx/issues/new/choose).

@@ -20,3 +20,8 @@ htmlcov/
 # memory and run state (project-specific; teams may want to gitignore these)
 # memory/
 # runs/
+
+CLAUDE.md
+lessons-learned.json
+.claude/
+.vscode/

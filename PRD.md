@@ -1,6 +1,6 @@
 # PRD: agentctx
 
-**Status:** Living Document · **Last updated:** 2026-02-24
+**Status:** Living Document · **Last updated:** 2026-03-04
 **Owner:** Tommy
 
 > This document is updated continuously as context engineering research
@@ -14,14 +14,17 @@
 `agentctx` is a **standalone Python library for multi-agent context and
 memory management**.
 
-It solves one problem: keeping AI agents coherent and cost-efficient
-across long-running, multi-step tasks — without a vector database,
-without an external memory service, and without being tied to any
-specific agent framework or LLM provider.
+It solves one problem: keeping AI agents coherent, cost-efficient, and
+secure — whether a single agent running across long sessions, or a fleet
+of specialized agents that must share context without contaminating each
+other — without a vector database, without an external memory service,
+and without being tied to any specific agent framework, orchestrator, or
+LLM provider.
 
 Any project drops it in, configures a storage path, and gets persistent
 observational memory, agent state checkpointing, and a stable cacheable
-context prefix — in under 20 lines of code.
+context prefix — in under 20 lines of code. A fleet of agents adds a
+shared bus and cross-agent trust boundaries with a few more lines.
 
 ---
 
@@ -39,10 +42,33 @@ Every new agent project rebuilds the same plumbing:
 - How do I prevent the observation log from becoming an injection
   surface?
 
-RAG solves some of this but requires a vector database, changes the
-prompt prefix every turn (breaking provider caching), and optimizes for
-retrieval over continuity. It is the wrong primitive for agents that
-need to *accumulate understanding* rather than *search a corpus*.
+And every multi-agent project hits a second layer of unsolved problems:
+
+- How do specialized agents share what they have learned without one
+  agent's noise polluting another's context?
+- How do I prevent a compromised agent from propagating an injection
+  into the rest of the fleet via shared memory?
+- How do I enforce the 1,000–2,000 token summary discipline that
+  Anthropic's own production systems require on agent-to-agent handoffs?
+- How do I apply trust tiers to content that arrives *from another
+  agent* rather than from a user or external source?
+
+The research term for the core multi-agent problem is **memory silos**:
+current architectures bind memory to a single entity, so agents cannot
+collaborate across sessions without either sharing everything (unsafe,
+expensive) or sharing nothing (uninformed). Every major framework
+(LangGraph, AutoGen, Swarm) conflates memory with orchestration — the
+memory model is inseparable from the workflow graph. This means there is
+no portable memory layer that works across frameworks or with no
+framework at all.
+(Sources: [MaaS arxiv 2506.22815], [G-Memory arxiv 2506.07398],
+[MAGMA arxiv 2601.03236])
+
+RAG solves some of the single-agent problems but requires a vector
+database, changes the prompt prefix every turn (breaking provider
+caching), and optimizes for retrieval over continuity. It is the wrong
+primitive for agents that need to *accumulate understanding* rather than
+*search a corpus*. It is even less suited to fleet-level shared memory.
 
 ---
 
@@ -53,26 +79,34 @@ A pip-installable Python library that provides:
 1. **Observational Memory** — compresses session history into a dated,
    prioritized log that stays as a stable prefix in every agent's
    context window
-2. **Run State** — checkpoints each step of a multi-agent pipeline so
-   partial failures resume from the last good state, not from scratch
-3. **Provider-agnostic** — works with Claude, Gemini, OpenAI, or any
+2. **Run State** — checkpoints each step of a pipeline so partial
+   failures resume from the last good state, not from scratch
+3. **Fleet Memory** — a shared observation bus that any agent in a fleet
+   can write to and read from, with per-agent private logs maintained
+   separately; cross-agent context is sanitized at semi-trusted tier
+   before entering any agent's context window
+4. **Provider-agnostic** — works with Claude, Gemini, OpenAI, or any
    model via a thin adapter
-4. **Zero infrastructure** — no vector DB, no Redis, no external
+5. **Framework-agnostic** — the memory substrate that sits *below* any
+   orchestration layer; plugs into LangGraph, AutoGen, Swarm, or no
+   framework at all without adopting their memory model
+6. **Zero infrastructure** — no vector DB, no Redis, no external
    service; storage is plain files on disk (git-trackable by design)
-5. **Pluggable** — integrates into existing pipelines as a wrapper, not
-   a framework you must adopt wholesale
-6. **Secure by default** — sanitizes inputs before they enter the
-   observation log, enforces trust boundaries between agents, and treats
-   the context window as an attack surface
+7. **Secure by default** — sanitizes inputs before they enter the
+   observation log, enforces trust boundaries between agents and between
+   agents and external content, and treats the context window as an
+   attack surface
 
-**Out of scope:**
+**Out of scope — these belong to orchestration frameworks:**
 
-- Agent orchestration / workflow definition (not a LangGraph
-  replacement)
+- Agent orchestration / workflow definition / task routing
+  (agentctx is the memory layer, not the workflow layer)
 - Tool use / function calling management
 - Model fine-tuning or training
 - Multi-tenant / cloud-hosted memory service
 - Real-time streaming context updates
+- Authentication / authorization between agents in distributed
+  deployments (caller's responsibility)
 
 ---
 
@@ -193,6 +227,63 @@ Each pipeline step writes a state record before completing:
 
 On restart, the pipeline reads state and skips completed steps. No
 custom database needed — state is a JSON file on disk.
+
+### 4.9 Fleet Memory (Multi-Agent)
+
+When multiple specialized agents run in a fleet, each agent maintains
+its own private `ObservationLog`. In addition, a single `FleetLog`
+serves as a shared broadcast bus:
+
+```text
+./memory/
+  fleet/
+    fleet.md        # shared observation bus (append-only)
+    fleet_audit.jsonl
+  agents/
+    scraper/
+      observations.md
+      audit.jsonl
+    rag/
+      observations.md
+      audit.jsonl
+    moderation/
+      observations.md
+      audit.jsonl
+```
+
+**Key design decisions grounded in research:**
+
+1. **Private by default, shared by choice.** An agent calls
+   `ctx.observe(...)` to write privately or `ctx.broadcast(...)` to
+   publish to the fleet log. Nothing crosses the boundary implicitly.
+
+2. **Cross-agent content is semi-trusted.** Content arriving from
+   another agent — even a trusted team member — passes through the same
+   `spotlight()` sanitization as tool outputs. An injected agent becomes
+   an injection vector for every agent it shares context with. This is
+   the session-smuggling threat applied to shared memory.
+
+3. **Context budget on handoffs.** When one agent passes context to
+   another, agentctx enforces a configurable token budget (default:
+   2,000 tokens). Agents summarize before sharing; they do not dump raw
+   history. This mirrors Anthropic's production pattern where subagents
+   return condensed 1,000–2,000 token summaries to a coordinator.
+
+4. **Peer prefix scoping.** `build_prefix(include_peers=["scraper",
+   "ocr"])` adds a filtered view of the fleet log — only entries
+   relevant to the requesting agent's task anchor — to Block 1. An
+   agent does not receive every entry from every peer; it receives
+   what is relevant.
+
+5. **No orchestration.** agentctx does not decide which agent runs
+   next, route tasks, or define workflows. The orchestrator (LangGraph,
+   Swarm, custom code, human) does that. agentctx is the memory
+   substrate those orchestrators sit on top of.
+
+6. **Single FleetLog is the MaaS pattern.** The HTTP sidecar exposes
+   fleet memory as a service callable from any language. This aligns
+   with the Memory-as-a-Service (MaaS) architecture identified in arxiv
+   2506.22815 as the missing primitive in multi-agent systems.
 
 ### 4.8 Context Engineering Principles
 
@@ -354,6 +445,26 @@ elevated trust before promoting session data to long-term storage.
 - External content never directly writes to Block 1 — it must pass
   through Observer sanitization first
 
+#### Cross-agent trust (Fleet Memory)
+
+Agent-to-agent communication is treated as `semi_trusted` — the same
+tier as tool outputs and database results. The reasoning: an agent that
+has been successfully injected will propagate that injection through any
+content it shares with peers. Trusting peer agents unconditionally
+converts a single-agent compromise into a fleet-wide compromise.
+
+Concretely:
+- Content written to the `FleetLog` by any agent passes through
+  `spotlight(tier="semi_trusted")` before entering any other agent's
+  context window
+- Agents cannot write directly to another agent's private
+  `ObservationLog`
+- The `FleetLog` has its own `audit.jsonl` tracking all writes,
+  including which agent wrote each entry
+- Bulk fleet writes (e.g., a scraper agent publishing 3,000 URL fetches)
+  are rejected at the API level — agents publish semantic summaries to
+  the fleet, not raw operational traces
+
 ### 5.3 What We Do Not Solve
 
 - **Adaptive attacks**: NIST evaluations show all static defenses break
@@ -483,6 +594,26 @@ All files are plain text or JSON. Git-trackable. No binary formats.
 - [ ] Semantic drift CI check: flag observation log divergence from
       task anchor over time
 
+### Phase 4 — Fleet Memory
+
+- [ ] `FleetLog`: shared append-only observation bus with per-agent
+      attribution; own audit trail
+- [ ] `AgentRegistry`: lightweight agent ID + role registry (in-memory
+      + optional disk persistence); no orchestration logic
+- [ ] `build_prefix(include_peers=[...])`: filtered fleet log view in
+      Block 1; relevance filtered against requesting agent's task anchor
+- [ ] `ctx.broadcast(text)`: publish to fleet log via semi-trusted
+      sanitization
+- [ ] Context budget enforcement on cross-agent handoffs (configurable
+      token cap, default 2,000 tokens)
+- [ ] HTTP server fleet endpoints: `POST /agents/register`,
+      `GET /agents`, `POST /broadcast`,
+      `GET /agents/{id}/prefix?peers=...`
+- [ ] Fleet audit + tamper detection (same pattern as single-agent
+      audit log)
+- [ ] Documentation: "What to broadcast vs. keep private" best
+      practices guide
+
 ---
 
 ## 9. Success Metrics
@@ -503,6 +634,52 @@ All files are plain text or JSON. Git-trackable. No binary formats.
 
 This section tracks significant research findings that changed the
 design, and implementation milestones. New entries go at the top.
+
+---
+
+### 2026-03-04 — Multi-agent memory architecture research
+
+Sources: [Anthropic: Effective Context Engineering][anthro-ce] ·
+[Anthropic: How we built our multi-agent research system][anthro-mas] ·
+[MaaS: Memory as a Service, arxiv 2506.22815][maas] ·
+[G-Memory: Hierarchical Memory for Multi-Agent Systems, arxiv 2506.07398][gmem] ·
+[MAGMA: Multi-Graph Agentic Memory, arxiv 2601.03236][magma] ·
+[Collaborative Memory with Access Control, arxiv 2505.18279][colmem] ·
+[Intrinsic Memory Agents, arxiv 2508.08997][intrinsic] ·
+[LangGraph, AutoGen, Swarm comparative analysis][openagents]
+
+Key findings incorporated:
+
+- **Memory silos are the defining unsolved problem in multi-agent
+  systems.** Every current framework (LangGraph, AutoGen, Swarm) binds
+  memory to its orchestration model, making memory non-portable. No
+  framework-agnostic shared memory layer exists. This is agentctx's
+  lane for Phase 4.
+- **MaaS pattern validates the HTTP sidecar.** The Memory-as-a-Service
+  architecture (decoupled, independently callable, composable memory
+  module) independently converges on the same pattern as agentctx's HTTP
+  sidecar. The sidecar is already the right architecture; it needs fleet
+  endpoints added.
+- **Cross-agent trust is an open wound.** Agent-to-agent content is
+  universally treated as trusted in current frameworks. Session smuggling
+  (Unit 42) and the FIDES threat model (arxiv 2505.23643) show this is
+  the next major attack surface. agentctx's semi-trusted tier for peer
+  content is the correct countermeasure.
+- **Anthropic's production system enforces a 1,000–2,000 token
+  handoff budget.** Subagents return condensed summaries to the
+  coordinator; they do not pass raw context. agentctx should enforce
+  this budget at the API level for fleet broadcasts.
+- **Scope confirmed: memory layer, not orchestration layer.**
+  LangGraph owns workflow graphs. Swarm owns handoff routing. AutoGen
+  owns conversation patterns. agentctx owns the memory substrate beneath
+  all of them. These are complementary, not competing.
+- **Hierarchical memory** (G-Memory insight/query/interaction tiers;
+  MAGMA semantic/temporal/causal/entity graphs) points to future work
+  beyond Phase 4 — the current flat observation log is a starting point,
+  not the end state.
+
+Design decisions updated: §1, §2, §3, §4.9 (new), §5.2 (cross-agent
+trust), §8 Phase 4 (new).
 
 ---
 
@@ -662,6 +839,16 @@ Key findings incorporated:
 
 ## 11. References
 
+### Multi-Agent Memory
+
+- [MaaS: Memory as a Service for Collaborative Agents, arxiv 2506.22815][maas]
+- [G-Memory: Hierarchical Memory for Multi-Agent Systems, arxiv 2506.07398][gmem]
+- [MAGMA: Multi-Graph Agentic Memory Architecture, arxiv 2601.03236][magma]
+- [Collaborative Memory with Dynamic Access Control, arxiv 2505.18279][colmem]
+- [Intrinsic Memory Agents: Heterogeneous Multi-Agent LLMs, arxiv 2508.08997][intrinsic]
+- [Anthropic: How we built our multi-agent research system][anthro-mas]
+- [CrewAI vs LangGraph vs AutoGen vs OpenAgents 2026][openagents]
+
 ### Memory and Context Engineering
 
 - [Observational Memory: 10× cost reduction, 94.87% LongMemEval][obsv]
@@ -689,6 +876,14 @@ Key findings incorporated:
 - [Microsoft FIDES: Information-Flow Control for Agents,
   arxiv 2505.23643][fides]
 - [Adaptive Attacks Break IPI Defenses, arxiv 2503.00061][adaptive]
+
+[maas]: https://arxiv.org/html/2506.22815v1
+[gmem]: https://arxiv.org/abs/2506.07398
+[magma]: https://arxiv.org/abs/2601.03236
+[colmem]: https://arxiv.org/html/2505.18279v1
+[intrinsic]: https://arxiv.org/html/2508.08997v1
+[anthro-mas]: https://www.anthropic.com/engineering/multi-agent-research-system
+[openagents]: https://openagents.org/blog/posts/2026-02-23-open-source-ai-agent-frameworks-compared
 
 [obsv]: https://venturebeat.com/data/observational-memory-cuts-ai-agent-costs-10x-and-outscores-rag-on-long
 [mastra]: https://www.techbuddies.io/2026/02/12/how-mastras-observational-memory-beats-rag-for-long-running-ai-agents/

@@ -90,8 +90,13 @@ TITLE_KEYWORDS = [
     # Context / memory (specific to LLMs)
     "context window", "context engineering", "context management", "long context",
     "memory augmented", "memory-augmented",
+    # Fleet / multi-agent memory (new scope)
+    "fleet memory", "shared memory", "collaborative memory", "memory silo",
+    "memory as a service", "agent memory", "cross-agent", "agent fleet",
+    "agent coordination", "agent communication",
     # Security
     "prompt injection", "jailbreak", "memory poisoning", "backdoor attack",
+    "agent hijacking", "session smuggling",
     # Retrieval-augmented generation
     "retrieval-augmented", "retrieval augmented generation",
     # Tool / function use
@@ -122,6 +127,12 @@ ARXIV_FEEDS = [
     "https://export.arxiv.org/api/query?search_query=all:long+context+LLM+context+window&sortBy=submittedDate&sortOrder=descending&max_results=5",
     # Memory poisoning / backdoor in LLM memory
     "https://export.arxiv.org/api/query?search_query=all:memory+poisoning+LLM+agent&sortBy=submittedDate&sortOrder=descending&max_results=5",
+    # Multi-agent memory and fleet context sharing
+    "https://export.arxiv.org/api/query?search_query=all:multi-agent+memory+sharing+context&sortBy=submittedDate&sortOrder=descending&max_results=10",
+    # Memory silos and collaborative agent memory
+    "https://export.arxiv.org/api/query?search_query=all:collaborative+memory+LLM+agents&sortBy=submittedDate&sortOrder=descending&max_results=10",
+    # Cross-agent trust and agent-to-agent security
+    "https://export.arxiv.org/api/query?search_query=all:agent+trust+security+multi-agent+LLM&sortBy=submittedDate&sortOrder=descending&max_results=5",
 ]
 
 ARXIV_CATEGORY_FEEDS = [

@@ -1,11 +1,15 @@
 # agentctx
 
-Context and memory management for AI agents.
+The framework-agnostic memory and context layer for AI agents.
 
-agentctx handles the parts of running an AI agent that LLM APIs don't: keeping a
-persistent observation log across sessions, building a stable cache-friendly context
-prefix for every LLM call, sanitizing untrusted inputs before they reach the model,
-and checkpointing multi-step pipelines so they can resume after failures.
+agentctx handles the parts of running AI agents that LLM APIs don't: persistent
+memory across sessions, stable cache-friendly context prefixes, input sanitization
+before content reaches the model, pipeline checkpointing, and — for multi-agent
+fleets — a shared context bus with cross-agent trust boundaries.
+
+It sits below any orchestration framework (LangGraph, AutoGen, Swarm) or none at
+all. It does not route tasks or define workflows. It manages what agents know and
+remember.
 
 ---
 
@@ -17,6 +21,8 @@ and checkpointing multi-step pipelines so they can resume after failures.
 | Agent loses state after a restart | `RunState` checkpoints each step to disk |
 | User input contains prompt injection | `Sanitizer.spotlight()` strips it and tags content by trust tier |
 | Hard to know what the agent did | `observe()` writes a structured, timestamped event log |
+| Agents in a fleet duplicate work or contradict each other | Fleet memory bus — shared context with per-agent isolation *(roadmap)* |
+| One injected agent poisons the whole fleet | Cross-agent semi-trusted tier sanitizes peer content *(roadmap)* |
 
 ---
 

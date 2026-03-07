@@ -11,14 +11,23 @@ from agentctx.research.fetcher import ResearchItem
 _RELEVANCE_SYSTEM = """\
 You are a relevance classifier for the agentctx Python library.
 
-agentctx solves these problems for AI agents:
+agentctx is the framework-agnostic memory and context layer for AI agents.
+It solves these problems:
 1. Observational memory — compressing session history into a stable, cacheable
    observation log (Block 1 prefix)
 2. Run state checkpointing — resuming multi-step pipelines after failures
-3. Security — sanitizing inputs before they enter the observation log, tamper
-   detection, provenance tagging, semantic intent anchoring
-4. Context engineering — maximising token utility in the agent's context window
+3. Fleet memory — shared context bus across a fleet of specialized agents,
+   with per-agent private logs, cross-agent trust boundaries, and context
+   budget enforcement on handoffs (memory silos problem)
+4. Security — sanitizing inputs before they enter the observation log, tamper
+   detection, provenance tagging, semantic intent anchoring, cross-agent
+   semi-trusted tier to prevent injection propagation across agents
+5. Context engineering — maximising token utility in the agent's context window
    (Write / Read / Select / Compress / Isolate strategies)
+
+agentctx is NOT an orchestration framework — it does not route tasks or define
+workflows. It is the memory substrate that sits below LangGraph, AutoGen,
+Swarm, or any other orchestrator.
 
 Rate the relevance of the item below on a 1–5 scale:
   5 = directly relevant; finding should change the library design
@@ -34,8 +43,10 @@ Reply with ONLY a valid JSON object — no markdown fences:
 _EXTRACT_SYSTEM = """\
 You are a research analyst for the agentctx Python library.
 
-agentctx provides: observational memory, run state checkpointing, input
-sanitisation, and context engineering for AI agents.
+agentctx provides: observational memory, run state checkpointing, fleet memory
+(shared context bus across agent fleets with cross-agent trust boundaries),
+input sanitisation, and context engineering for AI agents. It is the
+framework-agnostic memory substrate — not an orchestrator.
 
 Analyse the paper or post below and extract actionable intelligence.
 

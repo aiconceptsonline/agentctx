@@ -3,6 +3,78 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-03-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Sanitise reasoning traces, not just outputs",
+      "context": "CoT steps surface PII into intermediate reasoning text that is stored before any output filter runs; agentctx persists these traces in observational memory and checkpoints.",
+      "resolution": "Apply the same (or stricter) PII sanitisation pipeline to reasoning-trace segments before they are written to any agentctx store, treating them as untrusted input even when they originate from a trusted model.",
+      "rule": "Never write an unsanitised reasoning trace to a persistent or shared store; treat CoT output with the same suspicion as raw user input."
+    },
+    {
+      "date": "2026-03-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Fleet memory is a PII amplification path",
+      "context": "A single agent's CoT leakage can propagate to all fleet-memory subscribers if cross-agent boundaries do not enforce redaction at commit time.",
+      "resolution": "Add a redaction gate at fleet-memory write boundaries: classify each context entry's PII risk level before broadcast and strip or mask tokens above the configured risk threshold.",
+      "rule": "Cross-agent context sharing must be gated by PII risk classification; high-risk tokens must never reach the shared bus unredacted."
+    },
+    {
+      "date": "2026-03-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Use hybrid, pluggable gatekeeper chains rather than a single detector",
+      "context": "The paper shows no detector dominates across model families and reasoning budgets; a fixed single method will have systematic blind spots.",
+      "resolution": "Design agentctx's sanitisation API as an ordered list of callable gatekeepers so operators can compose rule-based, NER-based, and LLM-judge steps and tune the ensemble for their specific model and risk profile.",
+      "rule": "Never hardcode a single PII detection method; expose a composable, ordered pipeline interface."
+    },
+    {
+      "date": "2026-03-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Treat reasoning budget as a privacy-relevant, auditable parameter",
+      "context": "Leakage severity is a function of CoT budget and model family; an unconstrained reasoning budget is an uncontrolled privacy variable.",
+      "resolution": "Expose max_reasoning_tokens as a first-class, per-agent agentctx configuration parameter, log it alongside each run's audit trail, and surface it in context-engineering recommendations.",
+      "rule": "Reasoning budget must be declared, bounded, and audited — not left as an implicit model default."
+    },
+    {
+      "date": "2026-03-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Single-point hash verification leaves earlier audit entries vulnerable to undetected tampering",
+      "context": "AuditLog.verify() compares current content against only the last recorded SHA-256 digest; a malicious actor could alter prior entries without triggering any alarm.",
+      "resolution": "Adopt a hash-chain scheme where each AuditEntry records the SHA-256 of the previous entry's digest alongside its own, making any retroactive modification detectable.",
+      "rule": "Tamper-evidence requires a full hash chain, not just a terminal hash; never rely on a single checkpoint to assert log integrity."
+    },
+    {
+      "date": "2026-03-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Capability-scoping terminology in agentctx does not align with widely-used industry patterns, reducing documentation discoverability",
+      "context": "The TrustTier / spotlight / Sanitizer system is functionally equivalent to what the industry calls an 'AI Firewall', but the codebase uses internal terminology only.",
+      "resolution": "Add cross-references in docstrings and the PRD mapping agentctx concepts (TrustTier, sanitize_for_observation, spotlight) to the canonical pattern names (AI Firewall, Prompt Injection Defence).",
+      "rule": "Use industry-standard pattern names as aliases alongside internal naming so that external developers can map their mental model to the library surface."
+    },
+    {
+      "date": "2026-03-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Bounded Autonomy requires an explicit runtime gate, not just an intent anchor",
+      "context": "The Anchor class records original task intent but provides no mechanism to halt execution or request human confirmation when a proposed action crosses a risk threshold.",
+      "resolution": "Introduce a requires_human_approval(action_metadata) hook in RunState that downstream orchestrators can wire to a human-in-the-loop approval flow before high-impact tool calls proceed.",
+      "rule": "Storing intent is necessary but not sufficient for Bounded Autonomy; the framework must also expose a decision-gate primitive that orchestrators can intercept."
+    },
+    {
+      "date": "2026-03-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Fleet-memory trust boundaries do not substitute for time-bounded credential scoping (JIT privileges)",
+      "context": "agentctx's cross-agent trust tiers control what one agent can read or write in shared memory, but they are permanent for the session duration — there is no TTL or auto-revocation.",
+      "resolution": "Extend fleet-memory trust-tier assignments with an optional expires_at field so that elevated inter-agent access automatically degrades to a lower tier after task completion.",
+      "rule": "Trust tiers and JIT privileges are orthogonal controls; scope restriction alone is insufficient without temporal expiry."
+    },
+    {
       "date": "2026-03-06",
       "phase": "auto",
       "category": "research",

@@ -637,6 +637,32 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-03-09 — Research digest (automated)
+
+Auto-incorporated 2 item(s) with relevance ≥ 4.
+
+**[Safer Reasoning Traces: Measuring and Mitigating Chain-of-Thought Leakage in LLMs](https://arxiv.org/abs/2603.05618)**
+
+Research (2026-03-09) — arXiv:2603.05618 'Safer Reasoning Traces': CoT prompting increases inference-time PII leakage across 11 PII types even when output-level policies prohibit PII restatement; leakage is budget- and model-family-dependent and follows a measurable curve. No single detection method (rule-based, TF-IDF+LR, GLiNER, LLM-as-judge) is universally dominant, motivating hybrid ensembles. Implications for agentctx: (1) extend input sanitisation to cover intermediate reasoning traces stored in observational memory and run-state checkpoints, not just final outputs; (2) add risk-weighted PII redaction at fleet-memory commit boundaries to prevent cross-agent leakage propagation; (3) expose max_reasoning_tokens as an auditable, per-agent context-engineering parameter; (4) design the sanitisation API to accept pluggable, ordered gatekeeper chains to support ensemble detection strategies.
+
+- agentctx's input sanitisation layer must treat CoT/reasoning traces as a distinct, high-risk surface: PII scrubbing applied only to final outputs is insufficient — intermediate reasoning steps written into observational memory or run-state checkpoints must be sanitised independently.
+- Fleet memory (shared context bus) compounds the risk: a reasoning trace containing leaked PII from one agent can propagate to every subscriber unless cross-agent trust boundaries enforce per-field PII classification and redaction before a context entry is committed to the bus.
+- Run-state checkpointing should optionally support a 'scrubbed checkpoint' mode that strips or masks high-risk PII tokens from serialised reasoning traces before persistence, using the risk-weighted taxonomy as the priority ordering (SSN/financial first).
+- The finding that no single detector dominates motivates a pluggable, ensemble-capable sanitisation pipeline in agentctx: the API should accept an ordered list of gatekeeper callables (rule-based → NER → LLM-judge) so users can tune precision/recall per deployment.
+- CoT budget should be treated as a configurable context-engineering parameter that agentctx exposes: since budget affects leakage in a model-family-specific way, agents should be able to declare a max_reasoning_tokens budget that agentctx enforces and logs for audit.
+
+**[5 Essential Security Patterns for Robust Agentic AI](https://machinelearningmastery.com/5-essential-security-patterns-for-robust-agentic-ai/)**
+
+Research (2026-03-09) — Machine Learning Mastery: '5 Essential Security Patterns for Robust Agentic AI'. The article formalises five layered controls — JIT Tool Privileges, Bounded Autonomy, AI Firewall, Execution Sandboxing, and Immutable Reasoning Traces — that together constitute a defence-in-depth posture for agentic systems. agentctx already implements functional analogues of three: the Sanitizer with TrustTier spotlighting maps directly to the AI Firewall pattern; AuditLog with SHA-256 hashing partially realises Immutable Reasoning Traces (gap: single-point hash vs. a full hash chain); and the Anchor preserves task intent for Bounded Autonomy. Two gaps require roadmap attention: (1) JIT Tool Privileges — no time-bounded or auto-expiring credential primitive exists; fleet-memory trust tiers should be extended with TTL semantics; (2) Bounded Autonomy gates — run_state lacks a formal requires_human_approval() checkpoint for high-impact actions. Execution Sandboxing remains intentionally out of scope but should be referenced in integration documentation.
+
+- The Sanitizer + TrustTier spotlight system (TRUSTED / SEMI_TRUSTED / UNTRUSTED) is a direct implementation of the AI Firewall pattern; it should be documented using this industry-standard terminology to improve discoverability.
+- AuditLog (audit.py) partially satisfies Immutable Reasoning Traces via SHA-256 content hashing, but verify() only checks the most-recent hash — earlier entries can be silently tampered with; a hash-chain (each entry embeds the previous digest) is needed for genuine tamper-evidence.
+- The Anchor class (anchor.py) covers intent-preservation for Bounded Autonomy, but there is no formal human-in-the-loop checkpoint mechanism in run_state; a requires_human_approval() gate should be added for critical-action detection.
+- JIT Tool Privileges are a current gap: agentctx has no time-bounded or scope-limited credential model; fleet-memory cross-agent trust boundaries partially mitigate this but do not expire or auto-revoke.
+- Execution Sandboxing is intentionally out of scope (agentctx is not an orchestrator), but agentctx should document the expected boundary and provide guidance on integrating with container-level isolation at the run_state checkpoint.
+
+---
+
 ### 2026-03-04 — Multi-agent memory architecture research
 
 Sources: [Anthropic: Effective Context Engineering][anthro-ce] ·

@@ -3,6 +3,60 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-03-16",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Security perimeters defined at the API/interface layer are insufficient when authority is resolved in latent space",
+      "context": "agentctx enforces trust boundaries by tagging message provenance (which agent sent a message, which channel it arrived on), but if the receiving model grants authority based on writing style rather than the tag, the boundary is cosmetic",
+      "resolution": "Combine provenance tagging with content-style neutralization — strip or rewrite role-imitating patterns in tool outputs and cross-agent messages before they enter the model's context window",
+      "rule": "Trust boundaries must be enforced both at the routing layer (who sent it) AND at the content layer (how it reads); neither alone is sufficient against an adversary who can write in a privileged style"
+    },
+    {
+      "date": "2026-03-16",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Shared memory / fleet memory is an amplifier for role-confusion attacks",
+      "context": "A single compromised or malicious agent writing role-imitating content into the shared context bus can influence every downstream agent that reads that memory, multiplying the blast radius of a single injection",
+      "resolution": "Apply sanitization and role-imitation scoring at memory write time, not only at read time; consider an immutable append-only log with per-entry provenance hashes so that suspicious entries can be quarantined without corrupting the full history",
+      "rule": "Treat shared memory writes as untrusted external input regardless of the writing agent's current trust score — an agent may itself be a victim of injection before it writes"
+    },
+    {
+      "date": "2026-03-16",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Role confusion is measurable prospectively via internal probes, enabling pre-generation intervention",
+      "context": "The paper shows that a role-probe classifier over mid-layer activations predicts attack success before the model generates a token — this is a rare case where a vulnerability has an early-warning signal",
+      "resolution": "Investigate integrating a distilled role-probe as optional agentctx middleware: run the probe on the assembled context before handing it to the model, and surface a trust-signal metric that operators can threshold on",
+      "rule": "When a mechanistic early-warning signal exists for a class of attacks, prefer pre-generation interception over post-generation filtering — it is cheaper and prevents side-effects from completing"
+    },
+    {
+      "date": "2026-03-16",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Context isolation must be a runtime primitive, not an application-layer convention",
+      "context": "Deep Agents ships context isolation as part of its core runtime contract, not as a user-implemented pattern, because application-layer workarounds fail under artifact-heavy multi-step loads.",
+      "resolution": "agentctx should ensure its fleet memory trust boundaries and per-agent scoping are exposed as first-class primitives with typed APIs, not just documented conventions.",
+      "rule": "Any isolation or boundary guarantee that can be violated by the application layer should be enforced by the substrate instead."
+    },
+    {
+      "date": "2026-03-16",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Stateful planning requires checkpointing at plan-node granularity",
+      "context": "Deep Agents integrates planning as a structured component, implying that plan steps themselves are stateful artifacts that need to survive interruptions and resumptions.",
+      "resolution": "Extend agentctx's run state checkpointing to support sub-task or plan-node checkpoints, not just top-level run boundaries.",
+      "rule": "Checkpoint granularity should match the smallest unit of meaningful resumable work in the agent's execution model."
+    },
+    {
+      "date": "2026-03-16",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Framework bundling converts substrate competitors into distribution channels",
+      "context": "Deep Agents is opinionated about its memory layer; agentctx can offer a better memory backend but loses mindshare if it has no integration story with Deep Agents users.",
+      "resolution": "Publish a reference integration showing Deep Agents (or any LangChain-based agent) delegating its memory and state to agentctx, framing agentctx as a pluggable upgrade rather than a replacement.",
+      "rule": "When a bundled competitor ships, the fastest path to adoption is a compatibility layer that turns the competitor's users into a funnel."
+    },
+    {
       "date": "2026-03-09",
       "phase": "auto",
       "category": "research",

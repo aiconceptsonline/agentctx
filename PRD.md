@@ -637,6 +637,33 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-03-16 — Research digest (automated)
+
+Auto-incorporated 2 item(s) with relevance ≥ 4.
+
+**[Prompt Injection as Role Confusion](https://arxiv.org/abs/2603.12277)**
+
+Research (2026-03-16) — 'Prompt Injection as Role Confusion' (arXiv:2603.12277): This paper establishes that prompt injection is not a jailbreak/alignment failure but a role-attribution failure: models assign authority by textual style, not context-window position. Attacks spoofing system/assistant tone in tool outputs achieve ~60% success across major models. For agentctx, this reframes input sanitization as a style-neutralization problem and elevates the shared context bus and fleet memory as first-class injection surfaces. Priority actions for §10: (1) add role-imitation detection to the sanitization pipeline targeting tool-output and cross-agent message paths; (2) define per-tier structural encoding in the context engineering layer to break stylistic ambiguity; (3) extend cross-agent trust boundaries to penalize high-authority-style content arriving on low-trust channels; (4) evaluate feasibility of embedding a pre-generation role-probe classifier as an optional agentctx middleware component.
+
+- Input sanitization must go beyond keyword/pattern scrubbing: content arriving via tool outputs or external data sources that structurally mimics system/assistant turns (e.g. XML-like tags, chain-of-thought preambles, instruction-style imperatives) should be neutralized or clearly re-attributed before being placed in context.
+- Fleet memory and the shared context bus are high-value injection surfaces — a compromised agent can write role-imitating content into shared memory that a downstream agent then executes with elevated authority; trust boundaries must include content-style enforcement, not only sender identity.
+- Cross-agent trust scoring should incorporate a 'role-imitation signal': messages whose stylistic features probe as high-authority (system/assistant tone) but arrive on a low-trust channel should receive a trust penalty or be quarantined for human review.
+- Context engineering layer should enforce strict structural isolation between provenance tiers (system config, agent reasoning, tool results, user input) using delimiters or encoding that models cannot easily replicate in untrusted data — reducing the stylistic ambiguity that enables role confusion.
+- Run-state checkpoints may persist injected reasoning if an agent's chain-of-thought was already compromised before the checkpoint was written; checkpoint integrity verification should include a role-probe scan on restored reasoning traces.
+- The finding that role confusion is detectable in activations before generation is actionable: agentctx could integrate a lightweight probe (distilled classifier over mid-layer residuals) as a pre-generation gate on agent outputs, flagging responses where the model internally attributed high authority to an untrusted source.
+
+**[LangChain Releases Deep Agents: A Structured Runtime for Planning, Memory, and Context Isolation in Multi-Step AI Agents](https://www.marktechpost.com/2026/03/15/langchain-releases-deep-agents-a-structured-runtime-for-planning-memory-and-context-isolation-in-multi-step-ai-agents/)**
+
+LangChain released Deep Agents (March 2026), a structured runtime targeting multi-step stateful agents with explicit planning, memory, and context isolation layers. This development validates agentctx's core thesis that runtime-level memory contracts are necessary for production agents, while simultaneously raising the competitive bar within the LangChain ecosystem. Key differentiation opportunities identified: (1) framework-agnosticism vs. Deep Agents' LangChain lock-in, (2) agentctx's cross-agent trust boundary model as a more granular isolation primitive than Deep Agents' context isolation, (3) input sanitisation as an unreplicated safety capability, and (4) run state checkpointing at plan-node granularity as a gap to close. Recommended actions: clarify isolation semantics in docs, publish a Deep Agents integration example, and explicitly benchmark agentctx against Deep Agents on artifact-heavy multi-step workloads.
+
+- agentctx's framework-agnostic positioning is now more important as a differentiator — Deep Agents locks users into LangChain's stack, while agentctx can serve LangChain, LlamaIndex, raw Anthropic SDK, and other runtimes from the same substrate.
+- The 'context isolation' feature in Deep Agents maps directly to agentctx's cross-agent trust boundaries in fleet memory; agentctx should ensure its isolation semantics are clearly documented and demonstrably more granular (e.g. per-agent read/write scopes rather than binary isolation).
+- Deep Agents' planning component implies a need for checkpointed plan state — agentctx's run state checkpointing should explicitly support plan-node granularity to remain competitive with bundled solutions.
+- Input sanitisation in agentctx has no clear analogue in Deep Agents; this gap should be surfaced in marketing and docs as a safety-layer differentiator, especially for multi-agent pipelines where untrusted artifacts flow between steps.
+- agentctx should consider publishing a compatibility shim or integration example showing Deep Agents using agentctx as its memory backend, turning a competitor into a distribution channel.
+
+---
+
 ### 2026-03-09 — Research digest (automated)
 
 Auto-incorporated 2 item(s) with relevance ≥ 4.

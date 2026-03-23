@@ -3,6 +3,33 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-03-23",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Raw recency ordering of context is harmful under concurrency",
+      "context": "StreamBench shows that mixing documents from multiple concurrent events in a flat stream causes LLMs to conflate facts across events, degrading all three measured tasks.",
+      "resolution": "Post-retrieval context assembly in agentctx should group memories by event/run provenance before presenting them to the model, even if the underlying store is ordered by timestamp.",
+      "rule": "Never serve a flat recency-sorted context window when concurrent events may be present; always apply event-scoped grouping as the final assembly step."
+    },
+    {
+      "date": "2026-03-23",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Provenance metadata must be a first-class field, not an afterthought",
+      "context": "Structural cues only help if the system knows which documents belong to which event; the paper's gains depend entirely on having reliable event labels attached to documents.",
+      "resolution": "agentctx memory writes must enforce a non-nullable event/session provenance tag at ingestion time so retrieval can always reconstruct groupings; schema validation in input sanitisation should reject unlabelled entries.",
+      "rule": "Treat missing provenance as a sanitisation failure, not a graceful-degradation case."
+    },
+    {
+      "date": "2026-03-23",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Temporal reasoning cannot be outsourced to the LLM",
+      "context": "Even with structural cues, temporal QA remains an open challenge — models still struggle to correctly sequence facts across time when order must be inferred from content alone.",
+      "resolution": "agentctx checkpointing stores wall-clock and logical timestamps; the context engineering layer should sort and annotate entries with explicit sequence numbers before window assembly so the LLM receives ordered, labelled facts rather than raw text.",
+      "rule": "Sort by deterministic checkpoint timestamp before LLM consumption; do not rely on the model to infer temporal order from document content."
+    },
+    {
       "date": "2026-03-16",
       "phase": "auto",
       "category": "research",

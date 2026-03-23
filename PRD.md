@@ -637,6 +637,22 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-03-23 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[Can Structural Cues Save LLMs? Evaluating Language Models in Massive Document Streams](https://arxiv.org/abs/2603.19250)**
+
+StreamBench (arXiv:2603.19250, March 2026) demonstrates that LLM accuracy in concurrent document streams degrades sharply due to event conflation, and that structural cues — grouping context by event rather than serving raw chronological streams — recover significant performance (+4.37% clustering, +9.63% temporal QA). For agentctx, this validates prioritising event-scoped grouping in the context engineering layer: retrieved observational memories and fleet-memory entries should be post-processed into per-event buckets (keyed on run-id or event provenance tag) before window assembly, rather than returned in raw recency order. Checkpointing must record explicit event boundaries to supply this metadata. Input sanitisation should flag cross-event documents as lower-trust. Temporal ordering should be handled deterministically via checkpoint timestamps, not delegated to the LLM. These changes reduce context bleed across concurrent agent runs and improve answer attribution in fleet deployments.
+
+- Context engineering layer should emit event-scoped structural cues when assembling the context window: group retrieved memories or documents by event/run-id rather than raw recency order. This directly mirrors what the paper calls 'structural cues' and is implementable as a post-retrieval reranking/grouping step in the observational memory pipeline.
+- Fleet memory entries should carry a mandatory event or session provenance tag so that cross-agent context assembly can reconstruct per-event groupings at query time, preventing cross-agent context bleed in multi-tenant or concurrent-run scenarios.
+- Run state checkpointing should record event boundaries explicitly (start/end timestamps + trigger condition) so downstream context assembly has the metadata needed to produce structural cues without re-inferring them from raw logs.
+- Input sanitisation pipeline should detect and flag documents that span or straddle multiple concurrent events (ambiguous provenance), routing them to a lower-trust bucket rather than allowing them to silently pollute high-confidence event clusters.
+- Temporal QA results suggest agentctx should not rely solely on LLM reasoning for temporal ordering of retrieved context; a lightweight deterministic sort on checkpoint timestamps before LLM consumption will outperform asking the model to infer order from content.
+
+---
+
 ### 2026-03-16 — Research digest (automated)
 
 Auto-incorporated 2 item(s) with relevance ≥ 4.

@@ -637,6 +637,42 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-03-30 — Research digest (automated)
+
+Auto-incorporated 3 item(s) with relevance ≥ 4.
+
+**[MemoryCD: Benchmarking Long-Context User Memory of LLM Agents for Lifelong Cross-Domain Personalization](https://arxiv.org/abs/2603.25973)**
+
+MemoryCD (arXiv 2603.25973, March 2026) introduces the first real-world, cross-domain, lifelong user-memory benchmark using Amazon Review data across 12 domains and 4 personalisation tasks. Testing 14 LLM base models against 6 memory baselines, it finds that all current memory methods fall substantially short of user-level satisfaction, especially in cross-domain settings where unrelated behavioural signals contaminate retrieval. For agentctx, this validates three roadmap priorities: (1) domain-tagged observational memory with retrieval filters; (2) semantic domain scoping in fleet memory trust boundaries to prevent cross-agent context bleed; and (3) a real-interaction replay evaluation harness that goes beyond synthetic agent traces. The benchmark also confirms that large context windows are not a substitute for structured memory — reinforcing agentctx's core positioning as a memory substrate rather than a context-stuffing layer.
+
+- agentctx's observational memory layer should tag stored observations with domain/topic provenance so retrieval can filter or weight by domain relevance before surfacing context to an agent — without this, cross-domain noise degrades personalisation quality exactly as MemoryCD documents.
+- Fleet memory (the shared context bus) risks cross-agent contamination analogous to cross-domain confusion: trust boundaries should encode not just agent identity but semantic domain, preventing a customer-support agent's context from polluting a coding agent's memory window.
+- The benchmark gap between synthetic and real-world data argues for agentctx shipping an evaluation harness that supports real interaction replay, not just mock agent traces — this differentiates agentctx from frameworks whose correctness claims rest on scripted scenarios.
+- Run state checkpointing should preserve domain context alongside scalar state so that when a long-running agent resumes, its retrieved memories are scoped to the correct behavioural domain rather than flooding the context with unrelated historical observations.
+
+**[Chroma Releases Context-1: A 20B Agentic Search Model for Multi-Hop Retrieval, Context Management, and Scalable Synthetic Task Generation](https://www.marktechpost.com/2026/03/29/chroma-releases-context-1-a-20b-agentic-search-model-for-multi-hop-retrieval-context-management-and-scalable-synthetic-task-generation/)**
+
+Chroma's Context-1 (March 2026) validates the architectural direction of agentctx by demonstrating that passive context-window expansion is an inadequate retrieval strategy. The model's multi-hop, iterative search loop reinforces three near-term PRD priorities: (1) a multi-hop query API in observational memory that supports chained sub-query refinement with per-hop state persisted via run-state checkpointing; (2) provenance tagging on all fleet-memory retrievals so cross-agent synthesis respects trust boundaries established at retrieval time; and (3) expanded input sanitisation coverage at document-ingestion boundaries to neutralise prompt-injection payloads introduced through retrieved corpora. The paper's use of synthetic task generation also suggests agentctx should expose a benchmark harness that generates multi-hop retrieval scenarios for integration testing the memory substrate.
+
+- agentctx's observational memory layer should expose a multi-hop query interface: rather than returning a flat ranked list, retrieval should support iterative refinement where each hop's results feed the next query — aligning with how Context-1 operates internally.
+- The 'blunt instrument' critique of large context windows directly validates agentctx's context engineering mandate: the library should actively curate and compress what enters the context rather than passing raw retrieval dumps to the model.
+- Fleet memory's cross-agent trust boundaries become more important in multi-hop settings — each hop may be executed by a different agent, so retrieved evidence must carry provenance metadata so downstream agents can assess source trustworthiness before synthesis.
+- Run state checkpointing should capture inter-hop retrieval state (sub-queries issued, sources seen, partial answers) so multi-hop search can be resumed or audited after interruption, rather than restarting from scratch.
+- Input sanitisation needs to account for adversarial content in retrieved documents — multi-hop retrieval expands the attack surface because each hop introduces new external content that may attempt prompt injection before reaching the synthesising model.
+
+**[7 Steps to Mastering Memory in Agentic AI Systems](https://machinelearningmastery.com/7-steps-to-mastering-memory-in-agentic-ai-systems/)**
+
+A March 2026 Machine Learning Mastery survey of memory architecture for agentic systems (Bala Priya C, ~2 700 words) reinforces agentctx's core thesis that memory must be a structured, multi-tier substrate rather than ad-hoc context stuffing. Key design signals actionable for agentctx: (1) memory tiers should carry explicit semantic labels (working, run-scoped, long-term, procedural) exposed as first-class API metadata; (2) checkpointing must align to agent decision boundaries, not arbitrary intervals; (3) retrieved memory from any external or cross-agent source must traverse input sanitisation before entering the reasoning context, closing the poisoned-memory injection vector; (4) eviction policy should be a pluggable concern, not a hardcoded strategy; and (5) fleet-wide shared state requires write-provenance tagging to support trust-weighted retrieval and tamper detection. These findings validate the current agentctx roadmap and sharpen the interface contracts needed for the fleet memory and context engineering modules.
+
+- agentctx's observational memory layer should expose explicit tier metadata (working / run-scoped / long-term / procedural) on each memory entry so callers can apply tier-appropriate eviction and retrieval strategies without bespoke logic.
+- Fleet memory's cross-agent trust boundaries need a published threat model that explicitly covers poisoned-memory injection — retrieval results from peer agents should flow through the same input sanitisation pipeline as external user inputs.
+- Run state checkpointing should be keyed to decision boundaries (tool-call dispatch, LLM completion, branch points) rather than wall-clock intervals, matching the article's guidance on where state loss is most costly.
+- agentctx's context engineering layer should offer a pluggable eviction policy interface (LRU, relevance-scored, recency-weighted) so adopters can tune the working-memory/long-term trade-off without forking the library.
+- The shared context bus should enforce write-provenance tagging per agent identity so downstream consumers can apply trust-weighted retrieval and detect cross-agent state tampering.
+- agentctx should document — and optionally enforce — a separation between memory used for agent reasoning and memory used for audit/observability, preventing observational writes from polluting retrieval recall.
+
+---
+
 ### 2026-03-23 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

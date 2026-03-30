@@ -3,6 +3,96 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-03-30",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Domain provenance must be a first-class attribute of stored memories",
+      "context": "MemoryCD shows cross-domain retrieval conflates unrelated user signals, degrading personalisation",
+      "resolution": "Tag every observation written to agentctx's memory store with a domain/topic label at write time; expose a domain filter parameter on all retrieval APIs",
+      "rule": "Never store or retrieve memory without domain context; untagged memories are a liability in multi-domain deployments"
+    },
+    {
+      "date": "2026-03-30",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Synthetic benchmarks mask real-world memory failures",
+      "context": "All prior memory benchmarks used scripted personas; MemoryCD's real-data benchmark reveals far worse performance than synthetic evals suggested",
+      "resolution": "agentctx's test suite should include replay of real (or realistic) interaction logs across session boundaries, not only unit tests against mock traces",
+      "rule": "Validate memory correctness on realistic interaction distributions before claiming production readiness"
+    },
+    {
+      "date": "2026-03-30",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Fleet memory trust boundaries must include semantic scope, not just agent identity",
+      "context": "Cross-domain confusion in MemoryCD mirrors the risk of cross-agent memory bleed in agentctx fleets where agents serve different domains but share a context bus",
+      "resolution": "Extend the trust boundary model to carry a domain/scope claim alongside agent identity; gate cross-agent reads on domain compatibility",
+      "rule": "Agent identity alone is insufficient for safe fleet memory sharing — domain scope is a required trust dimension"
+    },
+    {
+      "date": "2026-03-30",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Iterative retrieval outperforms single-shot large-context stuffing for complex queries",
+      "context": "Context-1 decomposes queries into sub-queries across multiple hops rather than relying on a million-token context window, achieving better quality at lower latency and cost",
+      "resolution": "agentctx's observational memory API should support a stateful, iterative retrieval session — not just a one-shot fetch — with each hop's results stored in run state for auditability and resumability",
+      "rule": "Design retrieval interfaces for iteration, not saturation; the context window is a last-mile delivery mechanism, not a warehouse"
+    },
+    {
+      "date": "2026-03-30",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Multi-hop retrieval multiplies prompt-injection surface area",
+      "context": "Each retrieval hop fetches new external documents; any of these can contain adversarial instructions that propagate to the synthesis step, compounding risk relative to single-hop RAG",
+      "resolution": "Apply agentctx input sanitisation at every hop boundary, not just at the initial user-input stage; treat each retrieved document as an untrusted external input",
+      "rule": "Sanitise at every trust boundary crossing, including each retrieval hop in a multi-step search chain"
+    },
+    {
+      "date": "2026-03-30",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Role-specific retrieval models warrant dedicated fleet-memory slots with specialised metadata schemas",
+      "context": "Context-1 is a retrieval specialist, not a general LLM; in a multi-agent fleet it would occupy a distinct role whose outputs (ranked evidence, sub-query traces) differ structurally from those of reasoning or generation agents",
+      "resolution": "Fleet memory should support role-typed context slots with schema validation, so retrieval-agent outputs are structured (source, score, hop-index, provenance) rather than free-text, enabling downstream agents to process them reliably",
+      "rule": "Match fleet-memory schema to agent role; retrieval agents emit structured evidence, not prose"
+    },
+    {
+      "date": "2026-03-30",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Memory tiers must be explicit API citizens, not implicit implementation details",
+      "context": "Agents that cannot distinguish working-memory from long-term memory apply the wrong eviction and retrieval heuristics, causing both context blowout and stale-recall bugs.",
+      "resolution": "Attach a required tier field (enum: working | run | long_term | procedural) to every agentctx MemoryEntry; surface it in query results so callers can filter or weight by tier.",
+      "rule": "Every memory entry must declare its tier at write time; retrieval APIs must expose tier as a filterable, sortable dimension."
+    },
+    {
+      "date": "2026-03-30",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Retrieved memory is untrusted input and must be sanitised",
+      "context": "Poisoned long-term or fleet memory can silently hijack agent reasoning; treating retrieved context as inherently safe is the agentic equivalent of a second-order SQL injection.",
+      "resolution": "Route all retrieval results — including those from agentctx fleet memory — through the existing input sanitisation pipeline before they enter the LLM context window.",
+      "rule": "No retrieved memory bypasses sanitisation, regardless of source; sanitisation is not optional for memories originating from peer agents."
+    },
+    {
+      "date": "2026-03-30",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Checkpoint at decision boundaries, not at time intervals",
+      "context": "Time-based checkpointing misses the high-value state transitions (tool dispatch, branch selection) where re-computation is most expensive and failure most likely.",
+      "resolution": "agentctx run state checkpointing hooks should fire on tool-call dispatch and LLM completion events; time-based checkpointing should be a fallback, not the primary trigger.",
+      "rule": "Checkpoint granularity is defined by agent decision boundaries; wall-clock intervals are a safety net, not the primary mechanism."
+    },
+    {
+      "date": "2026-03-30",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Fleet shared state requires write-provenance tagging for trust-weighted retrieval",
+      "context": "Implicit shared state across agents erases the origin of writes, making it impossible to apply differential trust levels or detect tampering in multi-agent pipelines.",
+      "resolution": "Mandate agent-identity provenance tags on all fleet memory writes; expose provenance in retrieval results so consumers can apply configurable trust weights or reject untrusted sources.",
+      "rule": "All fleet memory writes must be tagged with the writing agent's verified identity; retrieval must never strip provenance metadata."
+    },
+    {
       "date": "2026-03-23",
       "phase": "auto",
       "category": "research",

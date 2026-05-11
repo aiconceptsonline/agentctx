@@ -3,6 +3,42 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-05-11",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Memory content shapes cooperative behavior independently of context length.",
+      "context": "Memory sanitization held token count fixed while swapping real history for synthetic cooperative records, fully restoring cooperation — ruling out attention dilution or position bias as causes.",
+      "resolution": "agentctx's sanitisation layer should reframe or summarise fleet memory entries in forward-looking terms before injection, not merely filter for safety or relevance.",
+      "rule": "When writing to or reading from fleet memory, treat narrative framing as a behavioral control surface; do not treat history as inert data."
+    },
+    {
+      "date": "2026-05-11",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Chain-of-Thought reasoning is a liability, not an asset, when agents have access to long negative histories.",
+      "context": "Ablating explicit CoT often reduced cooperation collapse, suggesting deliberation causes agents to over-weight salient negative patterns in history.",
+      "resolution": "Context engineering in agentctx should make reasoning verbosity configurable per deployment profile; multi-agent cooperative workflows should default to compressed or implicit reasoning modes.",
+      "rule": "Do not assume more reasoning trace detail improves multi-agent outcomes; expose reasoning depth as an operator-tunable parameter with documented cooperation trade-offs."
+    },
+    {
+      "date": "2026-05-11",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Forward-looking intent is a measurable, trainable cognitive property that can be isolated from task competence.",
+      "context": "A LoRA adapter trained only on forward-looking traces mitigated the memory curse and transferred zero-shot, meaning the behavioral fix is separable from domain-specific knowledge.",
+      "resolution": "agentctx's observational memory pipeline can score outgoing traces for intent orientation (forward vs. backward looking) as a lightweight classifier hook, enabling alerting or rewriting before traces enter the shared bus.",
+      "rule": "Instrument memory writes with intent-orientation scoring; treat consistently backward-looking agent traces as an early warning signal for impending cooperative breakdown."
+    },
+    {
+      "date": "2026-05-11",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Cross-agent memory sharing propagates not just facts but behavioral priors.",
+      "context": "In fleet settings, defection-coded events authored by one agent will be consumed by peers, importing the memory curse across trust boundaries even when data provenance is verified.",
+      "resolution": "Fleet memory trust boundaries in agentctx must evaluate not only data authenticity but valence: negative or defection-coded entries should be flagged, summarised, or reframed before propagation.",
+      "rule": "Validate fleet memory entries for cooperative framing in addition to provenance; a trusted-source defection log is still a cooperation hazard."
+    },
+    {
       "date": "2026-03-30",
       "phase": "auto",
       "category": "research",

@@ -637,6 +637,22 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-05-11 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[The Memory Curse: How Expanded Recall Erodes Cooperative Intent in LLM Agents](https://arxiv.org/abs/2605.08060v1)**
+
+Research (2026-05-11, arxiv 2605.08060): 'The Memory Curse' establishes that expanded agent recall is an active behavioral determinant in multi-agent systems, degrading cooperation in 64% of tested model-game configurations. The causal mechanism is content-driven erosion of forward-looking intent rather than context-length pressure, validated by a memory sanitization intervention that restores cooperation while holding prompt length fixed. Explicit CoT reasoning amplifies the effect. For agentctx, three concrete work items emerge: (1) add a cooperative-framing rewrite pass to the input sanitisation layer for fleet memory ingestion; (2) expose a history window policy API on run state checkpoints so operators can cap, summarise, or anchor visible history depth; (3) introduce an intent-orientation classifier hook in observational memory so reasoning traces can be scored or rewritten before propagating across the shared context bus. These changes position agentctx's memory substrate as a first-class lever for multi-agent cooperation stability, not merely a passive record.
+
+- agentctx's input sanitisation layer should gain a 'cooperative framing' mode for fleet memory writes: before injecting shared-bus entries into an agent's context, the sanitiser can reframe past interactions in forward-looking terms (outcomes achieved, next steps) rather than raw event logs, directly mirroring the paper's memory sanitization intervention.
+- Fleet memory (shared context bus) is an active behavioral determinant, not a passive substrate. Cross-agent trust boundaries must consider not just data provenance but narrative valence: a sequence of defection-coded events from peer agents will degrade the receiving agent's cooperative intent even if the events are authentic and trusted.
+- Run state checkpointing should expose a 'history window policy' API — allowing operators to cap visible history depth per agent, rotate or summarise old entries, or inject synthetic cooperative anchors — rather than always replaying the full checkpoint to the agent.
+- Context engineering in agentctx should treat CoT/reasoning verbosity as a tunable risk factor in multi-agent settings: surfacing a flag that suppresses or compresses explicit step-by-step reasoning traces when cooperation stability is the primary objective.
+- The LoRA probe result suggests agentctx could support a lightweight 'intent classifier' hook in the observational memory pipeline that scores outgoing reasoning traces for forward-looking vs. backward-looking orientation, enabling real-time alerting or automatic rewriting before traces enter fleet memory.
+
+---
+
 ### 2026-03-30 — Research digest (automated)
 
 Auto-incorporated 3 item(s) with relevance ≥ 4.

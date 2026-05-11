@@ -43,6 +43,14 @@
   "arxiv:2603.25857",
   "arxiv:2603.25960",
   "arxiv:2603.25973",
+  "arxiv:2605.06673",
+  "arxiv:2605.06676",
+  "arxiv:2605.06901",
+  "arxiv:2605.06919",
+  "arxiv:2605.06940",
+  "arxiv:2605.08045",
+  "arxiv:2605.08060",
+  "arxiv:2605.08083",
   "http://bair.berkeley.edu/blog/2026/03/13/spex/",
   "https://machinelearningmastery.com/5-essential-security-patterns-for-robust-agentic-ai/",
   "https://machinelearningmastery.com/5-practical-techniques-to-detect-and-mitigate-llm-hallucinations-beyond-prompt-engineering/",
@@ -60,6 +68,7 @@
   "https://thehackernews.com/2026/03/anthropic-finds-22-firefox.html",
   "https://thehackernews.com/2026/03/openai-codex-security-scanned-12.html",
   "https://thehackernews.com/2026/03/openclaw-ai-agent-flaws-could-enable.html",
+  "https://thehackernews.com/2026/05/fake-openai-privacy-filter-repo-hits-1.html",
   "https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/",
   "https://unit42.paloaltonetworks.com/gemini-live-in-chrome-hijacking/",
   "https://unit42.paloaltonetworks.com/genai-llm-prompt-fuzzing/",
@@ -98,5 +107,8 @@
   "https://www.marktechpost.com/2026/03/29/agent-infra-releases-aio-sandbox-an-all-in-one-runtime-for-ai-agents-with-browser-shell-shared-filesystem-and-mcp/",
   "https://www.marktechpost.com/2026/03/29/chroma-releases-context-1-a-20b-agentic-search-model-for-multi-hop-retrieval-context-management-and-scalable-synthetic-task-generation/",
   "https://www.marktechpost.com/2026/03/29/how-to-build-advanced-cybersecurity-ai-agents-with-cai-using-tools-guardrails-handoffs-and-multi-agent-workflows/",
-  "https://www.marktechpost.com/2026/03/29/meet-a-evolve-the-pytorch-moment-for-agentic-ai-systems-replacing-manual-tuning-with-automated-state-mutation-and-self-correction/"
+  "https://www.marktechpost.com/2026/03/29/meet-a-evolve-the-pytorch-moment-for-agentic-ai-systems-replacing-manual-tuning-with-automated-state-mutation-and-self-correction/",
+  "https://www.marktechpost.com/2026/05/10/how-to-build-a-cost-aware-llm-routing-system-with-nadirclaw-using-local-prompt-classification-and-gemini-model-switching/",
+  "https://www.marktechpost.com/2026/05/11/a-coding-implementation-to-build-agent-native-memory-infrastructure-with-memori-for-persistent-multi-user-and-multi-session-llm-applications/",
+  "https://www.marktechpost.com/2026/05/11/sakana-ai-and-nvidia-introduce-twell-with-cuda-kernels-for-20-5-inference-and-21-9-training-speedup-in-llms/"
 ]

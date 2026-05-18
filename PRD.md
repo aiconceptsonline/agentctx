@@ -637,6 +637,31 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-05-18 — Research digest (automated)
+
+Auto-incorporated 2 item(s) with relevance ≥ 4.
+
+**[TeamTR: Trust-Region Fine-Tuning for Multi-Agent LLM Coordination](https://arxiv.org/abs/2605.15207)**
+
+TeamTR (arXiv 2605.15207, May 2025) formalises compounding occupancy shift in shared-context multi-agent teams and proves that stale cached rollouts incur a quadratic penalty in agent count, reducible to linear by intermediate-occupancy evaluation with per-agent trust-region constraints. For agentctx this motivates four enhancements: (1) context-distribution fingerprinting on fleet memory bus writes to detect drift at read time; (2) per-agent occupancy metadata in run-state checkpoints to flag divergence on restore or hot-swap; (3) a statistical divergence-budget field in cross-agent trust boundaries extending input sanitisation beyond syntactic checks; and (4) a write-ordering / flush-priority scheduler for fleet memory that minimises the window during which downstream agents consume stale context, moving the system toward intermediate-occupancy semantics.
+
+- Fleet memory's shared context bus is precisely the locus of compounding occupancy shift: any write by one agent alters the distribution seen by all downstream agents reading from that bus. agentctx should expose a context-distribution snapshot mechanism (e.g., a lightweight embedding fingerprint or token-distribution hash at commit time) so that consumers can detect whether the context they are reasoning over has drifted since a cached plan or rollout was generated.
+- Run state checkpointing should record per-agent occupancy metadata alongside the serialised state blob. When a checkpoint is restored or a new agent version is hot-swapped (plug-and-play replacement), the loader can compute divergence relative to the snapshot baseline and emit a trust-boundary violation signal rather than silently replaying stale context, mirroring TeamTR's resampling trigger.
+- Cross-agent trust boundaries should be enriched with a divergence budget field analogous to TeamTR's per-agent KL constraint. Agents receiving context from peers could enforce that the incoming context fingerprint lies within an acceptable divergence radius of the expected distribution at trust-boundary ingestion time, giving input sanitisation a principled statistical check rather than purely syntactic validation.
+- The quadratic vs. linear scaling result suggests that the order in which agentctx flushes or propagates shared context updates matters for fleet-level stability. A write-ordering policy that minimises the number of agents reading stale context before the next flush (i.e., moving toward intermediate-occupancy evaluation) could be formalised as a scheduler hint or flush-priority queue in the fleet memory layer.
+
+**[Implementing Prompt Compression to Reduce Agentic Loop Costs](https://machinelearningmastery.com/implementing-prompt-compression-to-reduce-agentic-loop-costs/)**
+
+Research (2026-05-18): A practical guide to prompt compression in agentic loops confirms that unmanaged context accumulation is a primary cost driver in production agent systems, with costs scaling quadratically in turn count. The piece identifies three compression tiers (truncation, summarisation, semantic dedup) and highlights tool-output payloads as the highest-yield compression target. For agentctx, this validates the strategic importance of the context engineering subsystem and motivates three near-term enhancements: (1) per-entry compressibility tagging in observational memory, (2) compressed canonical snapshots as the checkpoint format rather than raw context, and (3) a two-tier publish model in fleet memory where agents emit both a full payload and a compressed digest, with consumers defaulting to the digest tier. Compression should be applied proactively at ingress, co-located with input sanitisation, rather than reactively when limits are approached.
+
+- agentctx's context engineering layer is the natural insertion point for a tiered compression pipeline: observational memory should tag each entry with a compressibility hint (raw-tool-output, assistant-turn, user-directive) so the engine can apply the right strategy per entry type rather than treating the context as a flat string.
+- Run-state checkpoints should store a compressed canonical snapshot, not the raw accumulated context; this keeps checkpoint size bounded and makes resumption cheaper — the checkpoint IS the rolling summary rather than a separate artifact.
+- Fleet memory (cross-agent context bus) should enforce a per-message size budget at ingestion time; agents publishing large tool outputs should be required to also publish a compressed digest, allowing consumer agents to subscribe to the digest tier by default and request the full payload only on demand.
+- Input sanitisation already sits on the ingress path; prompt compression can be co-located there as a second pass, normalising whitespace, deduplicating repeated content, and stripping boilerplate API response wrappers before the payload enters the memory store.
+- The trust-boundary model between agents maps cleanly onto compression: high-trust intra-fleet messages can use lossy summarisation (the receiver trusts the sender's summary), while cross-trust-boundary messages should retain raw content so the receiving agent can independently verify claims.
+
+---
+
 ### 2026-05-11 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

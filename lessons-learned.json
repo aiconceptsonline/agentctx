@@ -3,6 +3,60 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-05-18",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Shared mutable context creates implicit distributional coupling between agents that compounds on sequential updates.",
+      "context": "TeamTR proves that each agent update in a shared-context team shifts the occupancy distribution for all subsequent agents, and that evaluating on cached (pre-shift) rollouts accumulates error quadratically.",
+      "resolution": "agentctx fleet memory should attach a lightweight distribution fingerprint to each context write and expose it to readers so that stale-context consumption is detectable rather than silent.",
+      "rule": "Any shared context bus must version its distributional state, not just its content, so consumers can detect and reject occupancy drift before it compounds across agents."
+    },
+    {
+      "date": "2026-05-18",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Plug-and-play agent replacement is safe only when the replacement's context distribution is within a controlled divergence radius of the outgoing agent's.",
+      "context": "TeamTR's plug-and-play result depends on the trust-region constraint bounding how far a replacement component can shift the joint distribution. Without that bound, naive hot-swap causes coordination regression.",
+      "resolution": "agentctx run-state checkpoints should record the occupancy fingerprint at the time of last successful coordination, and the hot-swap path should refuse or warn when the incoming agent's fingerprint exceeds a configurable KL budget relative to that baseline.",
+      "rule": "Component replacement in a fleet must be gated on distributional compatibility, not just interface compatibility."
+    },
+    {
+      "date": "2026-05-18",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Context cost is superlinear without active management",
+      "context": "Each agentic loop iteration resends all prior context, so a 10-turn loop sends roughly 55 context-equivalents of tokens — not 10.",
+      "resolution": "Apply a rolling compression pass after every N turns, maintaining a bounded working-context size regardless of loop length.",
+      "rule": "Design memory systems so that stored context size is O(1) or O(log n) in loop length, never O(n)."
+    },
+    {
+      "date": "2026-05-18",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Tool output is disproportionately compressible",
+      "context": "Raw API responses (JSON, HTML, search results) are verbose but typically contain one or two extractable facts relevant to the agent's goal.",
+      "resolution": "Store extracted facts in memory rather than raw payloads; keep raw payloads only in an append-only audit log outside the hot context path.",
+      "rule": "Never let tool output enter the context window unprocessed; always pass it through an extraction step first."
+    },
+    {
+      "date": "2026-05-18",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Compression must be proactive, not reactive",
+      "context": "Triggering summarisation only when the context is nearly full wastes tokens on the summarisation call itself and risks missing the window.",
+      "resolution": "Set a compression threshold at ~60–70% of the context budget, leaving headroom for the compression call and the next agent turn.",
+      "rule": "Compress early and often; treat the context budget as a resource to manage continuously, not a hard wall to avoid."
+    },
+    {
+      "date": "2026-05-18",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Trust boundaries determine safe compression fidelity",
+      "context": "Lossy summarisation introduces the risk that a malicious or mistaken sender crafts a summary that omits material facts; this risk is higher across trust boundaries.",
+      "resolution": "Fleet memory should allow receivers to declare a minimum fidelity requirement per subscription channel, with full-payload delivery enforced for cross-trust-boundary channels.",
+      "rule": "Compression fidelity is a security property, not just a cost property — model it accordingly in the trust boundary design."
+    },
+    {
       "date": "2026-05-11",
       "phase": "auto",
       "category": "research",

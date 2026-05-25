@@ -637,6 +637,21 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-05-25 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[Tencent Open-Sources TencentDB Agent Memory: A 4-Tier Local Memory Pipeline for AI Agents](https://www.marktechpost.com/2026/05/23/tencent-open-sources-tencentdb-agent-memory-a-4-tier-local-memory-pipeline-for-ai-agents/)**
+
+TencentDB Agent Memory (Tencent, May 2026, MIT) demonstrates that a 4-tier memory pyramid (Conversation → Atom → Scenario → Persona) paired with symbolic log compression into task graphs yields a 61.38% token reduction and 51.52% pass-rate gain on WideSearch benchmarks. Hybrid BM25 + vector retrieval via RRF fusion raises persona-recall accuracy from 48% to 76%. For agentctx, these results motivate three concrete roadmap items: (1) a multi-stage consolidation pipeline for observational memory and run-state checkpoints, promoting raw events to atom and scenario summaries at checkpoint boundaries; (2) BM25 + dense-vector RRF as the default fleet-memory retrieval strategy; and (3) a pre-serialisation task-graph compression pass for checkpoint payloads, with sqlite-vec formalised as the recommended embedded vector backend.
+
+- agentctx's observational memory layer should adopt a multi-stage consolidation pipeline mirroring L0→L3: raw observations are fine for intra-turn recall, but inter-turn retrieval should promote salient events to atom-level facts and scenario-level summaries. This maps naturally onto agentctx's existing checkpoint lifecycle and would reduce context payload on resume.
+- Fleet memory queries (the shared context bus) currently lack a specified retrieval strategy. Adopting BM25 + dense-vector hybrid retrieval with RRF as the default resolver would materially improve cross-agent recall precision, especially for tool-use traces that contain both structured identifiers (BM25-friendly) and semantic intent (vector-friendly).
+- Run-state checkpoints store verbose tool logs that grow proportionally with agent runtime. A Mermaid-style task-graph compression pass applied before serialisation — analogous to TencentDB's short-term memory offload — could reduce checkpoint size by an estimated 40–60% while keeping the structural DAG intact for replay and debugging.
+- The local SQLite + sqlite-vec default stack aligns with agentctx's framework-agnostic, zero-cloud-dependency positioning. agentctx should document sqlite-vec as the recommended embedded vector backend for single-node deployments, with a plugin interface allowing fleet deployments to swap in a distributed store without changing the memory API.
+
+---
+
 ### 2026-05-18 — Research digest (automated)
 
 Auto-incorporated 2 item(s) with relevance ≥ 4.

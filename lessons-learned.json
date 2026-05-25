@@ -3,6 +3,42 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-05-25",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Hierarchical memory consolidation is a token-efficiency multiplier, not just an organisational pattern.",
+      "context": "TencentDB's 4-tier pyramid achieved over 60% token reduction; single-level memory stores accumulate redundant context linearly with runtime.",
+      "resolution": "Introduce explicit consolidation epochs in agentctx's checkpoint lifecycle: at each checkpoint, raw observations are promoted to atom facts and scenario summaries are maintained as a rolling compressed layer.",
+      "rule": "Never surface all raw observations to the retrieval layer; always consolidate through at least one abstraction tier before indexing for cross-turn or cross-agent recall."
+    },
+    {
+      "date": "2026-05-25",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Structured symbolic compression of tool logs (e.g. task-graph notation) preserves structural information at a fraction of the token cost of raw log storage.",
+      "context": "Mermaid canvas compression is the mechanism behind TencentDB's short-term memory efficiency; verbose tool logs are the primary driver of bloated agent context windows.",
+      "resolution": "Add a pre-checkpoint compression pass that converts sequential tool-call/result pairs into a DAG representation, retaining edge (dependency) and node (outcome) data while discarding verbose intermediate output.",
+      "rule": "Store tool execution as a graph, not a transcript; the graph is sufficient for replay, debugging, and retrieval while costing an order of magnitude fewer tokens."
+    },
+    {
+      "date": "2026-05-25",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "RRF fusion of BM25 and dense-vector retrieval consistently dominates either mode alone for agent memory workloads.",
+      "context": "PersonaMem accuracy jumped 28 percentage points with hybrid retrieval; agent memory contains both structured identifiers (tool names, IDs) and semantic intent that single-modal retrievers handle poorly.",
+      "resolution": "Implement RRF as the default retrieval combiner in agentctx's fleet memory bus, with BM25 over indexed atom facts and a dense encoder over scenario embeddings.",
+      "rule": "Always fuse keyword and semantic signals when querying agent memory; do not choose one retrieval mode and treat it as sufficient."
+    },
+    {
+      "date": "2026-05-25",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "A local-first embedded stack (SQLite + sqlite-vec) is sufficient for single-node production deployments and should be the default to remove infrastructure friction.",
+      "context": "TencentDB ships with no cloud dependency and runs fully offline; friction from requiring managed vector stores deters adoption of memory-augmented agents.",
+      "resolution": "Document sqlite-vec as the canonical embedded backend in agentctx, expose a clean storage-provider interface, and test the SQLite path in CI as the primary integration target.",
+      "rule": "Default to zero-dependency local storage; let fleet operators opt into distributed backends rather than requiring all users to provision external infrastructure."
+    },
+    {
       "date": "2026-05-18",
       "phase": "auto",
       "category": "research",

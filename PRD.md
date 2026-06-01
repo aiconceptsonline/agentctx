@@ -637,6 +637,21 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-06-01 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[LongDS-Bench: On the Failure of Long-Horizon Agentic Data Analysis](https://arxiv.org/abs/2605.30434)**
+
+LongDS-Bench (arXiv 2605.30434, May 2026) introduces a 68-task, 2,225-turn benchmark for long-horizon data analysis and finds that SOTA models fail primarily due to inability to maintain correct analytical state across turns — not due to insufficient reasoning steps. The best model scores 48.45% with a ~47-point early-to-late accuracy drop; 52–69% of failures trace to long-horizon state errors involving counterfactual perturbation, rollback, or multi-state composition. For agentctx this confirms three PRD priorities: (1) checkpointing must support named, restorable, composable state objects with rollback semantics; (2) observational memory must encode inter-turn dependency graphs, not flat event logs; and (3) context compaction policy should preserve dependency-reachable checkpoints while evicting unreachable intermediate states to arrest the late-turn decay pattern.
+
+- Run-state checkpointing must expose first-class rollback and multi-state composition APIs: the paper's taxonomy of failure modes maps directly to missing primitives — agents that cannot restore a named checkpoint or merge two divergent analytical states will hit the same 52–69% failure ceiling.
+- Observational memory should record state-deltas with explicit dependency edges (turn N depends on turn N-k), not flat snapshots; a flat log cannot reconstruct the causal chain needed to answer counterfactual queries or detect when a prior assumption was invalidated.
+- Context engineering must combat late-turn accuracy decay (47-point drop) by evicting or compressing stale intermediate states while preserving dependency-reachable checkpoints — this is a concrete criterion for the compaction policy in agentctx's context window manager.
+- The 'more steps don't help' finding validates agentctx's positioning: the bottleneck is state correctness, not reasoning budget. Fleet memory and cross-agent trust boundaries should propagate verified state objects rather than raw turn logs to avoid compounding stale-state errors across agent handoffs.
+
+---
+
 ### 2026-05-25 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

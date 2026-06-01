@@ -3,6 +3,33 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-06-01",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Interaction budget is not a substitute for state correctness",
+      "context": "LongDS shows that giving agents more steps does not recover accuracy lost to stale or corrupted analytical state.",
+      "resolution": "agentctx should expose a state-validity signal so orchestrators can detect and restore from a bad state rather than retrying with the same broken context.",
+      "rule": "Never increase agent step budget as a fix for state-tracking failures; instrument state health and checkpoint-restore instead."
+    },
+    {
+      "date": "2026-06-01",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Rollback and multi-state composition are first-class operations, not edge cases",
+      "context": "A significant share of benchmark tasks require reverting to a prior analytical state or merging two divergent states — operations most memory systems treat as afterthoughts.",
+      "resolution": "Design agentctx checkpoint IDs to be stable, addressable, and mergeable; expose a restore(checkpoint_id) and compose(checkpoint_a, checkpoint_b) API surface.",
+      "rule": "Any state that can be forked (e.g., counterfactual) must also be restorable and composable; checkpoint storage must retain the full graph, not just the latest node."
+    },
+    {
+      "date": "2026-06-01",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Dependency span (avg 11.3 turns) must be explicit in memory, not inferred",
+      "context": "Agents fail on tasks where a decision in turn N depends on an assumption established in turn N-11; flat logs force the model to re-derive this link each time.",
+      "resolution": "agentctx observational memory should tag each state write with the turn IDs it depends on, enabling efficient dependency-graph queries without re-reading all prior context.",
+      "rule": "Store provenance edges at write time; do not rely on the model to reconstruct causal chains from raw turn history at query time."
+    },
+    {
       "date": "2026-05-25",
       "phase": "auto",
       "category": "research",

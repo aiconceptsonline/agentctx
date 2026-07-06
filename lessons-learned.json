@@ -3,6 +3,33 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-07-06",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Static analysis of third-party skills cannot be trusted as a security gate",
+      "context": "SkillCloak's packing bypassed every tested static scanner >90% of the time, meaning any pre-load code-scanning step agentctx might apply to skills before registering them would offer only marginal protection.",
+      "resolution": "Treat skill-layer trust as 'untrusted-until-runtime-observed'; apply sanitisation to skill *outputs and context writes* rather than to skill *source*, and instrument side-effect channels (subprocesses, file I/O, outbound calls) via the observational memory layer.",
+      "rule": "Never gate security on static inspection of executable artifacts; gate it on observed runtime behaviour."
+    },
+    {
+      "date": "2026-07-06",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Fleet memory amplifies a single compromised agent into a fleet-wide threat",
+      "context": "If one agent executes a packed malicious skill that injects crafted context into the shared bus, every downstream agent that consumes that context inherits the attacker's payload — agentctx's cross-agent context propagation is the mechanism of spread.",
+      "resolution": "Tag every context-bus write with (agent_id, skill_id, trust_level) provenance metadata; consumers should be able to policy-gate reads on trust_level, and the fleet coordinator should quarantine context from agents whose skill registry is flagged.",
+      "rule": "Shared memory surfaces must carry provenance; readers must enforce trust-level policies, not just schema validation."
+    },
+    {
+      "date": "2026-07-06",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Checkpoints without skill-registry snapshots create a restore vulnerability",
+      "context": "A quarantined skill removed from a live session would be silently reinstated if run-state checkpoints captured only agent memory and not the active skill registry, negating the remediation.",
+      "resolution": "Extend the checkpoint schema to include a signed, immutable snapshot of the skill registry (name, version, hash, trust_status) so that restore validates skill state against the checkpoint and rejects any skill whose trust_status is 'quarantined'.",
+      "rule": "Checkpoint completeness: every mutable security-relevant surface (skills, permissions, trust labels) must be snapshotted and validated on restore."
+    },
+    {
       "date": "2026-06-01",
       "phase": "auto",
       "category": "research",

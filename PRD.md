@@ -637,6 +637,21 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-07-06 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[SkillCloak Lets Malicious AI Agent Skills Evade Static Scanners with Self-Extracting Packing](https://thehackernews.com/2026/07/new-skillcloak-technique-lets-malicious.html)**
+
+Research from HKUST (SkillCloak, July 2026) demonstrates that self-extracting packing evades static skill scanners >90% of the time across all tested AI coding-agent platforms, while a companion runtime checker recovers most detections. For agentctx §6 (input sanitisation) and §7 (fleet memory trust boundaries), this establishes that static manifest inspection at skill-load time is insufficient; the library should extend its observational memory instrumentation to capture skill invocation side-effects (subprocess, network, filesystem) as a runtime anomaly signal, enforce provenance tagging on all context-bus writes originating from skill execution, and include the active skill registry in run-state checkpoints to prevent silent re-introduction of quarantined skills on restore.
+
+- agentctx's input sanitisation pipeline must not treat skill manifests or plugin source as statically trustworthy; sanitisation should be applied to *outputs and side-effects* of skill invocations at runtime, not only to declared metadata at load time.
+- Fleet memory and the shared context bus become a lateral-movement vector: a single agent running a packed malicious skill can inject poisoned context entries that propagate to every peer agent trusting that source — cross-agent trust boundaries must tag context provenance with the originating skill identity and flag skill-sourced writes for elevated scrutiny.
+- Observational memory is the most natural integration point for a SkillCloak-class runtime detector: agentctx already instruments agent event streams, so logging skill invocation call graphs, unexpected subprocess spawns, or file/network side-effects at the observation layer would replicate the runtime-checker approach the HKUST team validated.
+- Run-state checkpointing should snapshot the skill registry alongside agent memory so that a checkpoint restore does not silently re-introduce a packed skill that was quarantined in the live session.
+
+---
+
 ### 2026-06-01 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

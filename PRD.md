@@ -637,6 +637,22 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-07-20 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[When Do Multi-Agent Systems Help? An Information Bottleneck Perspective](https://arxiv.org/abs/2607.16133v1)**
+
+A July 2026 paper (arxiv 2607.16133) provides the first formal information-theoretic justification for why multi-agent architectures outperform single-agent ones — and crucially, when they do not. The core result is that MAS advantage is a function of relay bandwidth: under infinite bandwidth the two systems are equivalent, so benefit only emerges when relay compression removes more redundant context than it destroys task-relevant information, captured by a parameter β sensitive to model scale and task dependency structure. For agentctx, this validates the fleet memory shared context bus as the correct architectural primitive but demands explicit relay-budget controls rather than transparent full-state forwarding. It further motivates aligning checkpoint granularity with agent relay boundaries, treating trust-tier policies as compression-ratio policies, and exposing a per-fleet relay-budget knob in the context engineering API so users can shift between SAS-equivalent (high bandwidth, low isolation) and true MAS (compressed relay, high isolation) operating modes.
+
+- The fleet memory shared context bus is precisely the 'relay channel' the paper models — its design should expose explicit bandwidth controls (token budget per relay message) rather than forwarding full upstream state, since unbounded relay collapses fleet memory to a single context with no architectural benefit.
+- agentctx's input sanitisation pipeline sits at the relay boundary and is load-bearing for the β trade-off: stripping redundant preamble and tool-call scaffolding from inter-agent messages increases effective relay bandwidth without growing token cost, directly improving MAS advantage.
+- Run-state checkpointing should checkpoint at relay boundaries (agent handoff points), not at arbitrary token intervals — this aligns persistence granularity with the information bottleneck structure and enables fine-grained replay from any relay hop.
+- Cross-agent trust boundaries in agentctx should be modelled as relay compression policies: high-trust channels can forward richer context (lower compression), while low-trust channels enforce aggressive summarisation — the paper's β framework justifies this as a principled design choice, not just a security heuristic.
+- Context engineering for fleet deployments should include a 'relay budget' parameter surfaced to users, allowing the library to auto-select between full-context forwarding (SAS-equivalent) and compressed relay (true MAS) based on task type, letting users trade latency for independence.
+
+---
+
 ### 2026-07-06 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

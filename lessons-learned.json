@@ -3,6 +3,33 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-07-20",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Unbounded context sharing between agents is architecturally equivalent to a single agent — no isolation benefit is gained.",
+      "context": "The paper proves that any MAS with full relay (no compression) can simulate any SAS exactly, eliminating the structural advantage of multi-agent design.",
+      "resolution": "agentctx fleet memory must enforce a configurable relay token budget per hop; the default should not be 'forward everything' even when context fits, or the fleet topology provides no benefit over a single long-context call.",
+      "rule": "Never forward full upstream context across agent boundaries by default; always apply at minimum a summarisation pass so the relay channel performs meaningful compression."
+    },
+    {
+      "date": "2026-07-20",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Input sanitisation at relay boundaries is a first-order performance lever, not just a safety measure.",
+      "context": "The paper shows MAS gain equals compression benefit minus relay information loss — removing low-information tokens (scaffolding, repeated system prompts, tool noise) widens the gain margin without increasing relay token cost.",
+      "resolution": "Prioritise sanitisation passes that strip structural noise (tool call XML, repeated preambles, scratchpad artifacts) from messages leaving an agent context before they enter the relay; these have near-zero information value and measurable token cost.",
+      "rule": "Apply structural-noise stripping as a mandatory step in the fleet memory write path, treating it as signal-preserving compression rather than optional cleanup."
+    },
+    {
+      "date": "2026-07-20",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Task dependency structure should drive the decision to use fleet (MAS) vs. single-context (SAS) mode — it is not a one-size-fits-all choice.",
+      "context": "The 18-experiment sweep shows MAS advantages on tasks with parallel, low-dependency sub-problems and SAS advantages on tightly sequential reasoning chains where each step critically depends on the full prior trace.",
+      "resolution": "agentctx should expose a task-topology hint (parallel vs. sequential) that auto-configures relay compression level — high compression for parallel subtask fleets, low or zero compression for sequential chain agents that need deep prior context.",
+      "rule": "Expose a topology parameter in fleet configuration; default sequential chains to low relay compression and parallel subtask fleets to high compression, and document the β trade-off so users can override with intent."
+    },
+    {
       "date": "2026-07-06",
       "phase": "auto",
       "category": "research",

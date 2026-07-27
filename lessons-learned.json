@@ -3,6 +3,42 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-07-27",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Implicit summarisation through task reward is insufficient for high-quality context compression.",
+      "context": "ABBEL shows that models trained only on task performance learn poor summarisation; the compaction gap to full-context policies does not close without direct supervision of belief content.",
+      "resolution": "agentctx should grade every compacted context object against the raw observations it replaces before the checkpoint is finalised, rejecting or flagging low-fidelity compressions.",
+      "rule": "Never treat context compaction as a side-effect of task training; make reconstruction fidelity an explicit, measurable invariant in the checkpointing pipeline."
+    },
+    {
+      "date": "2026-07-27",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Belief states are a better inter-agent currency than raw context chunks.",
+      "context": "The paper's proposed extension of inter-agent belief transmission maps directly onto agentctx's fleet memory bus; structured, graded summaries carry provenance and quality metadata that raw history dumps lack.",
+      "resolution": "Define a BeliefState type in fleet memory with fields: content (str), reconstruction_score (float), source_agent_id, and trust_level. The bus rejects states below a configurable score threshold.",
+      "rule": "Cross-agent context propagation should use typed, quality-scored belief objects, not opaque text blobs, to enable trust enforcement and auditable fleet-wide memory."
+    },
+    {
+      "date": "2026-07-27",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Peak memory budgets outperform average or reasoning-length penalties for controlling agent footprint.",
+      "context": "ABBEL found that penalising peak belief length preserved task performance better than penalising reasoning lengths, which could suppress useful chain-of-thought.",
+      "resolution": "agentctx's context engineering layer should expose a peak_tokens budget per checkpoint window, separate from any reasoning-trace limits, letting operators cap memory growth without degrading reasoning quality.",
+      "rule": "Budget memory at the belief/checkpoint level, not the reasoning-trace level; the two have different performance sensitivities and must be controlled independently."
+    },
+    {
+      "date": "2026-07-27",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Belief states introduce a new cross-agent trust attack surface.",
+      "context": "If agents accept belief states from peers without sanitisation, adversarial or compromised agents can inject malicious beliefs that poison downstream reasoning — a concern ABBEL does not address but that agentctx's trust-boundary model must.",
+      "resolution": "Route all inbound inter-agent belief states through the same input-sanitisation pipeline as external user input; apply structural validation, length caps, and content-pattern checks before the belief is merged into local context.",
+      "rule": "Treat every inbound belief state from another agent as untrusted external input regardless of fleet membership; trust is granted by the bus policy, not by origin identity."
+    },
+    {
       "date": "2026-07-20",
       "phase": "auto",
       "category": "research",

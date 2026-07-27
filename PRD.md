@@ -637,6 +637,22 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-07-27 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[Teaching LLMs to Update Beliefs for Efficient Long-Horizon Interaction](http://bair.berkeley.edu/blog/2026/07/26/abbel/)**
+
+ABBEL (BAIR, 2026-07-26) demonstrates that unsupervised context compaction systematically degrades long-horizon agent performance, and that the gap can be halved by explicitly supervising belief-state content via a reconstruction-grading objective. For agentctx §10: (1) the observational memory API should support pluggable reconstruction scorers so that compacted checkpoints can be graded before commit; (2) fleet memory's cross-agent bus should adopt belief states as first-class typed objects with an attached quality score, enabling trust-boundary enforcement at the information level rather than only at the agent level; (3) run-state checkpoints should migrate from raw-transcript snapshots to graded belief objects, reducing storage cost while improving inspectability; and (4) input sanitisation must treat inbound inter-agent belief states as untrusted, since ABBEL-style beliefs are a new vector for context poisoning across trust boundaries.
+
+- agentctx's observational memory layer should expose a reconstruction-scoring hook: given a candidate compressed context and the raw observations it replaced, a grader model scores reconstruction fidelity. This turns compaction from a fire-and-forget step into a verifiable, improvable operation — directly applicable to agentctx's context engineering pipeline.
+- Run-state checkpoints should store belief states (ABBEL-style structured natural-language summaries) rather than raw interaction transcripts. Belief states are smaller, explicitly graded for completeness, and human-readable, making checkpoint diffs inspectable and rollbacks semantically meaningful.
+- Fleet memory's cross-agent context bus should adopt belief states as its transmission unit. Rather than sharing raw context chunks, agents emit graded belief objects; the bus can enforce a quality threshold (reconstruction score ≥ τ) before accepting a belief into the shared context, implementing a trust boundary at the information-quality layer.
+- agentctx's input sanitisation stage gains a new attack surface to defend: adversarial observations can be crafted to poison belief states if the reconstruction grader is untrusted. The trust-boundary model should treat incoming inter-agent belief states as untrusted external input, stripping them through the same sanitisation path as user input.
+- Context engineering for long-horizon agents should prefer explicit belief-length budgets (peak length penalty) over implicit compression, giving downstream consumers predictable memory footprints — important for fleet-level resource planning.
+
+---
+
 ### 2026-07-20 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

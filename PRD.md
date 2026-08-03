@@ -637,6 +637,33 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-08-03 — Research digest (automated)
+
+Auto-incorporated 2 item(s) with relevance ≥ 4.
+
+**[TokTier: Exact Stateful Tokenization for Agentic LLM Serving](https://arxiv.org/abs/2607.29678v1)**
+
+TokTier (arXiv 2507.29678) demonstrates that for agentic LLM workloads at high cache-hit rates (94.1% observed), tokenization of repeated long transcripts dominates time-to-first-token, reaching 64% of TTFT — not inference. The median call appends only ~1.4K characters, and only ~2% of calls trigger a full context rebuild. This validates and sharpens agentctx's prefix-stability design principle: context segments (system prompt, prior turns, fleet-shared preambles) must be emitted as byte-identical, append-only blocks across calls; any sanitisation or normalisation must be applied once and frozen before first emission. Action items for the PRD: (1) run state checkpoints should carry optional tokenization boundary metadata to enable warm resume at the serving layer; (2) fleet memory broadcasts should expose content-addressed, byte-stable canonical segments rather than regenerating context per agent; (3) observational memory compaction must produce a new stable prefix rather than mutating an existing one in place.
+
+- Context engineering must treat emitted prefix segments (system prompt, prior turns, shared fleet context) as byte-stable, append-only logs. Any normalisation or sanitisation applied by agentctx's input pipeline must be finalized before first emission and frozen thereafter — post-emission mutation invalidates the entire downstream KV cache and stateful tokenization state.
+- Run state checkpoints should optionally carry tokenization boundary metadata (byte offsets, stable-boundary positions, session token counts) so a TokTier-compatible serving layer can resume stateful tokenization from a checkpoint without re-processing the full accumulated context.
+- Fleet memory's shared context bus should emit content-addressed, byte-identical canonical segments. When multiple agents share the same system context or cross-agent trust boundary preamble, identical byte sequences multiply KV cache hit rates and allow a single tokenization result to serve the whole fleet rather than per-agent recomputation.
+- agentctx's observational memory compaction and summarisation passes must be scheduled to produce a new, stable prefix rather than performing in-place edits to an existing one — rewriting a prefix mid-session forces a full re-tokenization and breaks prefix cache alignment for all downstream agents sharing that segment.
+
+**[5 Architectural Patterns for Persistent Memory and State in AI Agents](https://machinelearningmastery.com/5-architectural-patterns-for-persistent-memory-and-state-in-ai-agents/)**
+
+Research (2026-08-03) — Machine Learning Mastery, '5 Architectural Patterns for Persistent Memory and State in AI Agents': The article formalises five memory/state patterns (in-context working buffer, execution checkpointing, semantic memory, episodic event logs, multi-scope segregation) and maps directly onto agentctx's existing feature surface. Key actionable findings: (1) input sanitisation must cover all memory-write paths including tool outputs, not just user inputs; (2) run state checkpointing requires an explicit idempotency contract surfaced in the API; (3) observational memory needs supersession/TTL support to prevent stale-fact coexistence; (4) fleet memory's trust boundaries must be enforced at the storage layer, not the application layer; (5) episodic logs need causality tagging to distinguish environmental from strategy failures; and (6) long-lived deployments require a first-class hygiene API (TTLs, consolidation, pruning) to prevent retrieval quality degradation and cost growth over a six-month-plus horizon.
+
+- Input sanitisation must gate every write to observational memory and fleet memory, not just user-facing inputs. The article explicitly calls out tool outputs and scraped content as persistent corruption vectors — agentctx's sanitisation layer should cover all memory-write paths.
+- Run state checkpointing docs and API should surface an explicit idempotency contract: callers must mark nodes idempotent or non-idempotent, and the checkpoint restore path should warn or block on non-idempotent nodes that partially executed.
+- Observational memory needs a supersession mechanism (recency score, TTL field, or explicit invalidation API) so that updated facts displace rather than coexist with their predecessors.
+- Fleet memory's cross-agent trust boundaries directly implement the multi-scope segregation pattern. The storage backend should enforce namespace isolation at the query layer, not rely on the calling agent to filter correctly.
+- Episodic event logs stored in observational memory should carry a causality tag (environmental vs. strategy failure) to prevent one-off infra failures from poisoning future planning retrievals.
+- agentctx needs a lifecycle / hygiene API: store-level TTL configuration, consolidation/deduplication jobs, and pruning policies. Without these, long-running fleets will see retrieval quality and cost regress regardless of how well the core patterns are implemented.
+- The sliding-window compression pattern (in-context buffer) should expose extraction hooks so valuable reasoning traces are promoted to observational memory before being discarded, rather than being silently lost.
+
+---
+
 ### 2026-07-27 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

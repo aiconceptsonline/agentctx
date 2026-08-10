@@ -637,6 +637,21 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-08-10 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[Sharding Prevents LLM Oversight Failures and Adversarial Exploitation](https://arxiv.org/abs/2608.06422)**
+
+Research (2026-08-10, arXiv 2608.06422): 'Sharding Prevents LLM Oversight Failures and Adversarial Exploitation' demonstrates that bundling multiple evaluation criteria into a single LLM call degrades per-verdict quality even when compute budget is held equal, and that sharding (partitioning requirements across separate calls with aggregated verdicts) recovers that quality while also providing robustness against best-of-N adversarial presentation attacks. Validated across expert-graded research replication, legal, and clinical-trial benchmarks. Implication for agentctx: the context engineering, trust-boundary evaluation, input sanitisation, and observational memory scoring subsystems should expose a sharded-evaluation primitive that partitions criterion sets and aggregates results, rather than constructing single large judgment prompts. A sharded weaker model can outperform a holistic stronger model, making this a quality and cost lever simultaneously.
+
+- agentctx's context engineering layer should treat multi-criterion evaluation as a first-class sharding primitive: when building LLM-judge prompts (e.g. for run-state validation, trust-boundary checks, or fleet-level quality gates), partition requirement sets and dispatch separate calls rather than bundling all criteria into one prompt.
+- The fleet memory cross-agent trust boundary subsystem, which must evaluate whether an incoming agent's claims are credible, is directly exposed to the bundling failure: if many trust signals are checked in a single LLM call the weakest signals will be under-grounded. Sharding trust checks by category (provenance, scope, recency, permission) is a structural fix.
+- Input sanitisation pipelines that use LLM-based policy checks should shard by policy class rather than sending a combined policy list; this also narrows the adversarial surface since a best-of-N attacker can no longer exploit holistic judges through presentation variation.
+- Observational memory retrieval scoring — where an LLM rates the relevance of multiple retrieved chunks in one pass — should be replaced with per-chunk or small-group calls to avoid the weak-grounding degradation documented across expert domains.
+
+---
+
 ### 2026-08-03 — Research digest (automated)
 
 Auto-incorporated 2 item(s) with relevance ≥ 4.

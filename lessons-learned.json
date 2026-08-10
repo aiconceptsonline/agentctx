@@ -3,6 +3,33 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-08-10",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Bundling many evaluation criteria into a single LLM call causes weak grounding on a subset of decisions, even with an adequate token budget.",
+      "context": "agentctx constructs LLM-judge prompts for run-state validation and trust-boundary checks that may list many requirements at once.",
+      "resolution": "Partition requirement lists into small shards (e.g. ≤3–5 criteria per call), dispatch in parallel, and aggregate verdicts in the orchestration layer.",
+      "rule": "Never ask an LLM to return more verdicts in one call than can each be deeply grounded in the supplied evidence; shard first, aggregate after."
+    },
+    {
+      "date": "2026-08-10",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Best-of-N adversarial attacks exploit holistic judges by varying presentation while holding content fixed; sharding breaks this attack surface.",
+      "context": "agentctx's input sanitisation and fleet-memory ingestion must resist adversarial agent outputs that probe for policy bypasses through prompt reformulation.",
+      "resolution": "Shard sanitisation checks by policy class so no single call sees the full policy surface; an adversary maximising one shard cannot simultaneously optimise across all shards.",
+      "rule": "Design LLM-based policy and sanitisation checks as sharded panels, not monolithic classifiers, to limit adversarial leverage."
+    },
+    {
+      "date": "2026-08-10",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "A sharded weaker model can outperform a holistic stronger model, making sharding a joint quality and cost optimisation.",
+      "context": "agentctx users may default to the largest available model for trust or quality evaluations, assuming capability scales with model size.",
+      "resolution": "Benchmark sharded smaller-model configurations against holistic larger-model configurations before defaulting to the expensive option; document sharding as a recommended configuration in the context engineering guide.",
+      "rule": "Prefer sharded evaluation architecture over raw model scaling; validate with held-out expert agreement before committing to a model tier."
+    },
+    {
       "date": "2026-08-03",
       "phase": "auto",
       "category": "research",

@@ -637,6 +637,32 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-08-17 — Research digest (automated)
+
+Auto-incorporated 2 item(s) with relevance ≥ 4.
+
+**[Okta targets AI agent token costs with MCP scoping](https://www.artificialintelligence-news.com/news/okta-targets-ai-agent-token-costs-with-mcp-scoping/)**
+
+Okta's August 2026 MCP scoping work formalises the 'tool tax' problem: static exposure of full tool manifests to every agent call wastes tokens proportional to the number of registered tools, independent of task relevance. Their identity-scoped filtering approach — authorisation layer determines tool visibility before context is assembled — maps directly onto agentctx's trust-boundary and context-engineering responsibilities. PRD §10 should track a ToolManifestScope primitive that integrates with the fleet memory context bus: given an agent identity and trust tier, it emits a filtered tool schema subset, persists the active manifest version in run-state checkpoints for replay fidelity, and applies the same sanitisation pipeline already used for inbound data. This positions agentctx as the framework-agnostic enforcement point for identity-aware context shaping, ahead of anticipated MCP ecosystem standardisation of scoping semantics.
+
+- agentctx's context engineering layer should support tool-manifest scoping as a first-class primitive: given an agent identity or trust tier, emit only the tool subset authorised for that principal, reducing fleet-wide token spend without application-layer changes.
+- The fleet memory and cross-agent trust boundary subsystem is the natural home for identity-to-tool-set mappings; storing scoped manifests in the shared context bus lets all agents in a fleet inherit consistent, up-to-date tool views without per-agent configuration.
+- Input sanitisation should be extended to cover outbound context assembly — stripping unauthorised or contextually irrelevant tool schemas before they reach the model call, analogous to how agentctx already sanitises inbound data.
+- Run-state checkpointing should record which tool manifest version was active at each step so audits and replays use the same scoped set, preventing scope-drift bugs during long-running agent runs.
+- agentctx could expose a ToolManifestScope API that accepts (agent_id, trust_tier, task_context) and returns a filtered tool list, sitting between the MCP server and the model call to implement the Okta pattern framework-agnostically.
+
+**[OpenAI, Anthropic, Google API Flaw Let Weaker AI Models Decode Stronger Models' Reasoning](https://thehackernews.com/2026/08/openai-anthropic-google-api-flaw-let.html)**
+
+§10 Research Changelog — 2026-08-17: A multi-provider API flaw (OpenAI, Anthropic, Google) disclosed in August 2026 demonstrated that provider-issued reasoning objects (encrypted chain-of-thought blobs) lack session binding, enabling cross-session replay attacks and secrets exfiltration from logs. For agentctx, this mandates three hardening items: (1) fleet memory and the shared context bus must strip or reject reasoning blobs from all inter-agent payloads; (2) run state checkpoints must never persist raw provider reasoning objects — only sanitised structured derivatives; and (3) the input sanitisation layer must add a reasoning-object provenance check that quarantines blobs not provably originating from the current agent's own API call. These changes directly protect agentctx's core value proposition around cross-agent trust boundaries and should be tracked as security-tier PRD items.
+
+- Fleet memory and the shared context bus must treat provider-issued reasoning blobs as untrusted, opaque, and potentially hostile inputs — they must never be forwarded between agents or stored in shared memory without explicit stripping or validation, regardless of which agent produced them.
+- Run state checkpointing must not persist raw reasoning objects to durable storage; if checkpoint fidelity requires preserving model state, agentctx should extract only sanitised, structured fields and discard the provider blob before writing to the checkpoint store.
+- Cross-agent trust boundaries are directly threatened: an adversarial agent in a fleet could inject a foreign reasoning blob into a sibling agent's context, hijacking its reasoning chain — agentctx's trust boundary enforcement must explicitly reject or quarantine reasoning objects that did not originate in the current agent's own call stack.
+- Input sanitisation pipelines need a new class of check: reasoning-object provenance validation. Before any context is assembled for a model call, agentctx should strip or reject fields matching known provider reasoning-blob shapes (e.g. OpenAI `reasoning`, Anthropic `thinking` blocks) unless they were produced by that exact session.
+- Observational memory that stores tool call traces or API responses is a latent secrets store if those responses include reasoning content — agentctx should default to redacting or hashing reasoning-adjacent fields before committing observations to memory.
+
+---
+
 ### 2026-08-10 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

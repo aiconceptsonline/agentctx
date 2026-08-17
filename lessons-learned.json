@@ -3,6 +3,69 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-08-17",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Full tool-manifest exposure is a token cost liability at scale",
+      "context": "Okta measured that including all MCP tool schemas on every model call creates compounding overhead — the 'tool tax' — that grows with tool-registry size regardless of task relevance.",
+      "resolution": "Filter tool manifests to the authorised, contextually relevant subset before context is assembled, making scoping an infrastructure concern rather than a per-prompt responsibility.",
+      "rule": "Never pass a maximal tool list to a model call; always scope to (identity × task context) at the context-assembly layer."
+    },
+    {
+      "date": "2026-08-17",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Authorisation boundaries are context boundaries",
+      "context": "Okta frames the scoping problem as identity-driven: what a principal is allowed to do should determine what the model even sees as possible, not just what it is permitted to invoke at runtime.",
+      "resolution": "Integrate trust-tier metadata into context assembly so that tool visibility, not just tool execution, is gated by the agent's authorisation level.",
+      "rule": "Trust boundaries must be enforced at context-shape time, not only at invocation time — unauthorised tools should be invisible, not merely blocked."
+    },
+    {
+      "date": "2026-08-17",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Tool manifest version must be checkpointed with run state",
+      "context": "If tool scopes change between a run's initiation and its replay or audit, the agent's decision trace becomes uninterpretable — it may reference or avoid tools that were not in scope at the original step.",
+      "resolution": "Snapshot the active tool manifest (or a content-addressed reference to it) alongside each run-state checkpoint so replays are deterministic with respect to tool visibility.",
+      "rule": "Checkpoint tool manifest identity as a first-class run-state field whenever scoped context assembly is in use."
+    },
+    {
+      "date": "2026-08-17",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Provider reasoning blobs are not session-scoped by design — they are replayable.",
+      "context": "OpenAI, Anthropic, and Google all issued encrypted reasoning objects intended to be passed back in subsequent calls, but none cryptographically bound the blob to the originating session or caller identity.",
+      "resolution": "agentctx must enforce a local invariant: reasoning blobs are stripped from any context before it crosses an agent boundary or enters shared/fleet memory.",
+      "rule": "Never treat a provider-issued reasoning object as trustworthy or session-safe; treat it as you would a bearer token — strip before sharing, never log, never checkpoint raw."
+    },
+    {
+      "date": "2026-08-17",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Log and checkpoint stores become secrets vaults when reasoning content is retained.",
+      "context": "Researchers recovered API keys and passwords from session logs because the model's hidden chain-of-thought reasoned about credentials and that reasoning was preserved in the encrypted blob, which was later replayed and decoded.",
+      "resolution": "agentctx's observational memory and checkpoint serialisers should apply a redaction pass that detects and removes fields matching provider reasoning-blob schemas before any write to durable storage.",
+      "rule": "Durable storage (memory, checkpoints, audit logs) must never contain raw provider reasoning objects; apply schema-aware redaction at write time, not read time."
+    },
+    {
+      "date": "2026-08-17",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Weaker models can be used as decode oracles for stronger models' reasoning when blobs are portable.",
+      "context": "The tier separation between model classes (e.g. mini vs. full reasoning models) offered no protection — the blob, once obtained, could be fed to any compatible endpoint.",
+      "resolution": "Fleet trust boundaries in agentctx must be enforced at the context-assembly layer, not assumed from model identity. A lower-trust agent should never receive a reasoning blob produced by a higher-trust agent, regardless of model tier.",
+      "rule": "Trust boundaries are context boundaries, not model-tier boundaries; enforce them by controlling what enters context assembly, not by inferring safety from which model is running."
+    },
+    {
+      "date": "2026-08-17",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Architectural assumptions about tamper-evidence and scope must be verified, not inherited.",
+      "context": "Providers assumed their encrypted blobs were both tamper-evident and session-scoped; neither was validated at the protocol level, allowing the flaw to persist across all three major providers simultaneously.",
+      "resolution": "agentctx should document its own trust assumptions about provider-issued objects explicitly and add test coverage that deliberately attempts cross-session and cross-agent replay to verify boundary enforcement.",
+      "rule": "Any security property that agentctx relies on from a provider (tamper-evidence, session binding, expiry) must be independently verified or defensively assumed absent."
+    },
+    {
       "date": "2026-08-10",
       "phase": "auto",
       "category": "research",

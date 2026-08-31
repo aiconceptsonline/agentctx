@@ -637,6 +637,21 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-08-31 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[Recognition Without Enforcement: Configuration-Dependent Failures in LLM Agent Instruction Arbitration and External Control](https://arxiv.org/abs/2608.28502v1)**
+
+Research from 'Recognition Without Enforcement' (arXiv 2608.28502, 2026) establishes that LLM agents exhibit a recognition-enforcement gap: they can detect forged authority at the representation level and verbalise it when asked, yet still execute malicious tool calls under permissive configurations. Across a fleet evaluation of 46 model endpoints (6 vendors, including open-weight) with 14,294 spoofed trials, mean attack execution is 1.21% [0.5–2.1% model-clustered CI], but failures cluster in reproducible model-config-prompt cells rather than being uniformly distributed. Configuration — not model weights — is the decisive control variable: restrictive policies eliminate failures on the same models that are deterministically vulnerable under permissive settings. A parallel memory-conflict evaluation (48 models) confirms memory injection as a distinct attack surface. For agentctx §10: (1) fleet memory trust boundaries must be enforced at the infrastructure layer via provenance tagging and channel-metadata canonicalisation, not by relying on model-layer detection; (2) input sanitization should target source-format spoofing signals pre-context; (3) default fleet memory policies should be restrictive, with peer-agent writes assigned user-tier trust; and (4) a per-model vulnerability cell profile should be surfaced to operators to enable targeted config hardening without global performance penalties.
+
+- Fleet memory trust boundaries cannot be delegated to model self-enforcement. agentctx must tag every memory write with a cryptographically-scoped provenance record (source channel, trust tier, injection timestamp) so the consuming agent receives structured metadata that does not depend on the model detecting forgery at inference time.
+- The recognition-enforcement gap validates moving input sanitization earlier in the pipeline: agentctx's sanitizer should strip or canonicalize source-format spoofing signals (role-template position markers, channel metadata headers, authority-formatting cues) before content reaches the model context, not after.
+- Configuration is the primary control surface. agentctx should ship restrictive-by-default fleet memory policies (e.g. memory writes from non-orchestrator agents downgraded to user-tier trust automatically) and expose a per-model vulnerability profile API so operators can tighten config for known-vulnerable cells without blanket restrictions.
+- The memory conflict evaluation (48 models) directly maps to agentctx's observational memory pipeline. Any memory entry that was written by a peer agent should be presented to the consuming model with an explicit 'peer-sourced' label in the context slot, not silently merged into system-level context where it inherits elevated trust.
+
+---
+
 ### 2026-08-17 — Research digest (automated)
 
 Auto-incorporated 2 item(s) with relevance ≥ 4.

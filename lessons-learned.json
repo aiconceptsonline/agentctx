@@ -3,6 +3,42 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-08-31",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Model recognition of forged authority does not imply enforcement",
+      "context": "Models can verbally identify a spoofed instruction source and still execute the spoofed tool call — the two capabilities are dissociable at the activation level.",
+      "resolution": "agentctx must enforce trust boundaries structurally (provenance metadata, channel scoping, context-slot assignment) rather than trusting the model to refuse at inference time.",
+      "rule": "Never treat model self-detection of a threat as a sufficient control; pair it with an infrastructure-layer block that fires regardless of inference output."
+    },
+    {
+      "date": "2026-08-31",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Configuration is the primary attack surface for trust arbitration failures",
+      "context": "The same model weights produce zero failures under restrictive policy and deterministic failures under permissive policy — the vulnerability is in the config, not the model.",
+      "resolution": "Ship restrictive-by-default fleet memory policies in agentctx; require explicit opt-in to elevated trust grants; document which config knobs expand the attack surface.",
+      "rule": "Default to the least-permissive config that satisfies the use case; treat permissiveness grants as security-sensitive API surface requiring review."
+    },
+    {
+      "date": "2026-08-31",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Aggregate fleet vulnerability metrics hide per-cell risk",
+      "context": "1.21% mean success rate across 46 endpoints obscures cells that are deterministically vulnerable — an operator relying on the fleet average would under-allocate mitigation to the high-risk cells.",
+      "resolution": "agentctx fleet memory should maintain per-(model, config, prompt-class) vulnerability telemetry and surface it as a first-class observable, not average it away.",
+      "rule": "Report vulnerability distributions, not just means; flag any cell that exceeds a per-cell threshold even when the fleet mean is acceptably low."
+    },
+    {
+      "date": "2026-08-31",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Memory injection is a first-class, independently-scoped attack vector",
+      "context": "The paper evaluates memory conflict separately from authority spoofing (48 vs. 46 models), implying the threat model and mitigations differ from direct prompt injection.",
+      "resolution": "agentctx observational memory writes from peer agents must be quarantined to a lower trust tier and surfaced with explicit provenance labels in the consuming agent's context; silent merging into system context is disallowed.",
+      "rule": "Treat every memory write as an untrusted input until its provenance is verified; assign trust tier at write time, not at read time."
+    },
+    {
       "date": "2026-08-17",
       "phase": "auto",
       "category": "research",

@@ -3,6 +3,33 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-09-07",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Model self-reported explanations are not behaviourally grounded",
+      "context": "Across two task types and eight models, cited top factors had Spearman correlations of only ~0.35 (necessity) and ~0.30 (sufficiency) with actual decision behaviour measured through controlled interventions.",
+      "resolution": "Do not persist or forward LLM explanation fields as if they are causal summaries; tag them as unverified metadata in the agentctx memory schema.",
+      "rule": "Treat any model-generated rationale as low-trust until validated by a behavioural probe; never use it as the sole basis for memory indexing, context pruning, or trust-boundary decisions."
+    },
+    {
+      "date": "2026-09-07",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Explanation fidelity varies by task type and may be lower for safety-critical domains",
+      "context": "The harmfulness/risk judgment task — most directly relevant to agentctx input sanitisation — showed explanation–behaviour gaps comparable to or larger than the advisory recommendation task.",
+      "resolution": "Apply extra scepticism to harm-judge explanations in the sanitisation pipeline; supplement with independent counterfactual probes or ensemble checks rather than relying on the judge's stated factors.",
+      "rule": "For safety-critical gating decisions, explanation-derived policies require an independent behavioural validation step before deployment."
+    },
+    {
+      "date": "2026-09-07",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Black-box necessity/sufficiency probing is a viable, internals-free evaluation method",
+      "context": "The paper achieves rigorous explanation fidelity measurement using only API-level counterfactual interventions and ablations, with no access to model weights or activations.",
+      "resolution": "agentctx can implement a lightweight explanation-audit utility that estimates necessity/sufficiency scores for any plugged-in LLM component using the same black-box protocol, providing a standard quality gate for new integrations.",
+      "rule": "When onboarding a new LLM decision component into a fleet, run a short necessity/sufficiency probe on a representative sample before trusting its explanation output in downstream logic."
+    },
+    {
       "date": "2026-08-31",
       "phase": "auto",
       "category": "research",

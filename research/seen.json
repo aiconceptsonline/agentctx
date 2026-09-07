@@ -156,6 +156,10 @@
   "arxiv:2608.27549",
   "arxiv:2608.28502",
   "arxiv:2608.28532",
+  "arxiv:2609.04272",
+  "arxiv:2609.04290",
+  "arxiv:2609.05370",
+  "arxiv:2609.05385",
   "http://bair.berkeley.edu/blog/2026/03/13/spex/",
   "http://bair.berkeley.edu/blog/2026/07/26/abbel/",
   "https://machinelearningmastery.com/5-architectural-patterns-for-persistent-memory-and-state-in-ai-agents/",
@@ -207,6 +211,7 @@
   "https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/",
   "https://unit42.paloaltonetworks.com/ai-agent-supply-chain-risks/",
   "https://unit42.paloaltonetworks.com/ai-enabled-malware-analysis/",
+  "https://unit42.paloaltonetworks.com/ai-tool-use-targeting-latam-orgs/",
   "https://unit42.paloaltonetworks.com/gemini-live-in-chrome-hijacking/",
   "https://unit42.paloaltonetworks.com/genai-llm-prompt-fuzzing/",
   "https://unit42.paloaltonetworks.com/navigating-security-tradeoffs-ai-agents/",
@@ -308,5 +313,6 @@
   "https://www.marktechpost.com/2026/08/28/vercel-vgpu-webgpu-library-open-source/",
   "https://www.marktechpost.com/2026/08/29/anthropic-opens-a-research-preview-of-the-model-hardware-standard-mhs-a-shared-specification-for-ai-agents-to-safely-operate-physical-devices/",
   "https://www.marktechpost.com/2026/08/29/google-ai-releases-gemini-omni-1-1-flash-40-second-scene-extension-first-last-frame-control-and-4k-upscaling/",
-  "https://www.marktechpost.com/2026/08/29/mirros-code-as-world-executable-world-representations/"
+  "https://www.marktechpost.com/2026/08/29/mirros-code-as-world-executable-world-representations/",
+  "https://www.marktechpost.com/2026/09/04/google-agentic-video-understanding-gemini-flash-models/"
 ]

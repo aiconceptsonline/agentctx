@@ -637,6 +637,22 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-09-07 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[Necessary or Sufficient? Evaluating LLM Explanations With Behavioural Evidence](https://arxiv.org/abs/2609.05385v1)**
+
+Research (2026-09): Kireev et al. 'Necessary or Sufficient?' (arXiv 2609.05385) evaluates whether LLM-cited decision factors are behaviourally valid across eight models using black-box necessity and sufficiency probes. Mean Spearman correlations of ~0.35 and ~0.30 respectively confirm that model explanations are structurally decoupled from causal decision behaviour. For agentctx this has direct consequences for three subsystems: (1) observational memory — logged rationales should be tagged as unverified self-report rather than replay-stable provenance; (2) fleet memory / context bus — forwarded explanation fields must not be consumed as high-trust summaries of upstream decision context; (3) input sanitisation — harm-judge explanations are insufficient as the sole basis for redaction policy. Recommended mitigations: add an explanation-fidelity flag to the memory schema, emit a warning when context-compression logic references model-cited factors, and document that sufficiency-based context pruning requires independent behavioural validation rather than self-reported rankings.
+
+- Observational memory that logs LLM-cited rationales as decision provenance is storing unreliable signals: the logged factors will not reproduce the original output under replay, weakening run-state checkpointing fidelity and audit trails.
+- Fleet memory and the cross-agent context bus must not treat an upstream agent's explanation as a faithful summary of what it responded to — downstream agents that condition on forwarded rationales may be conditioning on noise rather than the true causal context.
+- Input sanitisation pipelines that use an LLM harm-judge's cited factors to decide which spans to redact or quarantine are operating on explanations with ~30% sufficiency correlation — a policy derived from those factors will have systematic gaps and false assumptions.
+- Context engineering strategies that prioritise retaining 'the most influential factors' reported by a model component should be re-evaluated: the sufficiency scores show that retaining only those factors often fails to preserve the output, meaning context compression guided by model self-report will degrade performance in unpredictable ways.
+- Trust boundary enforcement that relies on an agent's stated reasoning to decide escalation or gating cannot assume that reasoning matches actual decision logic; agentctx should treat explanation fields as low-trust metadata rather than verified decision evidence.
+
+---
+
 ### 2026-08-31 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

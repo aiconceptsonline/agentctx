@@ -637,6 +637,22 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-09-14 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[Context Engineering Inside the Harness: 4 Mechanisms That Beat Context Overflow and Goal Loss on Long-Horizon Tasks](https://www.marktechpost.com/2026/09/12/context-engineering-inside-the-harness-4-mechanisms-that-beat-context-overflow-and-goal-loss-on-long-horizon-tasks/)**
+
+Research from a September 2026 MarkTechPost analysis of production harness implementations (LangChain Deep Agents, Claude Code, Manus, OpenAI Codex, Amazon Bedrock AgentCore) confirms that long-horizon agent failures decompose into exactly two orthogonal failure modes — context overflow and goal loss — each requiring dedicated harness-layer mechanisms rather than model-side mitigations. Critically, goal loss is shown to occur independently of context overflow, meaning goal state must be checkpointed and managed as a first-class concern. For agentctx, this validates the architectural separation between run state checkpointing and observational memory, and motivates three concrete roadmap items: (1) a token-budget-aware observational memory write path with configurable promotion/demotion thresholds, (2) explicit goal-state fields in checkpoint payloads with cross-fleet read access via the shared context bus, and (3) a pre-tool-call goal-drift detector in the input sanitisation pipeline. Published threshold constants should align agentctx defaults with observed production values to reduce integration friction.
+
+- agentctx's observational memory layer should expose a token-budget-aware write path: when remaining headroom crosses a configurable threshold (analogous to the production thresholds cited), the library should automatically promote high-salience observations and demote low-salience ones rather than letting callers overflow passively.
+- Run state checkpointing should checkpoint goal state as a first-class field separate from execution state — not merely serialising the full context — so that goal loss can be detected and recovered independently of context overflow recovery.
+- Fleet memory's shared context bus is a natural place to store the canonical goal representation so that even if an individual agent's local context is rolled over or truncated, the goal can be re-injected from the bus; cross-agent trust boundaries should allow goal-state reads from any member of the fleet without elevated permissions.
+- Input sanitisation should include a goal-drift detector: before each tool call, compare the active task objective in the current context against the checkpointed canonical goal and surface a warning (or block) if cosine similarity or structural diff falls below a threshold, catching goal loss before it compounds.
+- agentctx should publish its own default thresholds (as named constants, not magic numbers) aligned with what production harnesses ship — giving downstream framework integrators a documented, tuneable starting point rather than requiring them to reverse-engineer production behaviour.
+
+---
+
 ### 2026-09-07 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

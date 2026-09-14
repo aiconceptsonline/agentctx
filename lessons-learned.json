@@ -3,6 +3,42 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-09-14",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Treat goal state and execution state as separate checkpointing concerns",
+      "context": "Production harnesses show goal loss occurring even when context headroom is available, meaning a single unified context snapshot is insufficient to recover a stalled agent",
+      "resolution": "agentctx run state checkpoints should carry a dedicated goal_state field that is written on task start and re-validated on resume, independent of the broader execution snapshot",
+      "rule": "Never conflate 'we saved the context' with 'we saved the goal' — goal loss and context overflow require separate detection and recovery paths"
+    },
+    {
+      "date": "2026-09-14",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Proactive context eviction at a threshold is strictly better than reactive truncation at the limit",
+      "context": "Systems waiting until the window is full must truncate aggressively and non-selectively; systems with threshold-triggered eviction can apply salience ranking to preserve the most valuable observations",
+      "resolution": "agentctx observational memory should accept a high-water-mark parameter (e.g. 0.75 of window) at which salience-ranked eviction begins, not at 1.0 when it is too late to be selective",
+      "rule": "Configure eviction to start at 75% window utilisation; at 100% all choices are forced and salience-ranking is no longer possible"
+    },
+    {
+      "date": "2026-09-14",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Cross-fleet goal persistence is the structural solution to goal loss in multi-agent settings",
+      "context": "Individual agent context windows roll over during long tasks; without an external canonical store, the goal is lost the moment it scrolls out of every active agent's window",
+      "resolution": "Fleet memory's shared context bus should be the authoritative store for task goals; agents should re-read the goal from the bus at the start of each major step rather than relying on local context continuity",
+      "rule": "The canonical goal lives on the bus, not in any agent's local context — agents must pull, not assume"
+    },
+    {
+      "date": "2026-09-14",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Publish named threshold constants rather than embedding magic numbers",
+      "context": "Production systems (LangChain, Bedrock AgentCore, etc.) ship concrete token-count thresholds that integrators need to tune; undocumented magic numbers create friction and divergence across deployments",
+      "resolution": "agentctx should export threshold constants (e.g. DEFAULT_EVICTION_THRESHOLD_TOKENS, DEFAULT_GOAL_DRIFT_SIMILARITY_FLOOR) with docstrings citing the production reference points they are calibrated against",
+      "rule": "Every tuneable threshold must be a named export with a documented default rationale — no magic numbers in library code"
+    },
+    {
       "date": "2026-09-07",
       "phase": "auto",
       "category": "research",

@@ -3,6 +3,33 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-09-28",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Shared context stores are high-value lateral movement targets",
+      "context": "The Hugging Face incident involved agents operating on a shared evaluation environment; a compromised agent in a fleet can read or corrupt context belonging to sibling agents if the bus has no access control.",
+      "resolution": "Fleet memory in agentctx must enforce scoped read/write tokens per agent identity, with every cross-boundary access logged with timestamp, caller identity, and the key(s) accessed.",
+      "rule": "No agent may read or write another agent's context namespace without an explicit, auditable grant — default-deny on the fleet bus."
+    },
+    {
+      "date": "2026-09-28",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Visibility is a security primitive, not an observability nice-to-have",
+      "context": "Organizations discovered breaches only after the fact and could not reconstruct agent behavior because there was no structured record of tool calls and context operations.",
+      "resolution": "agentctx's observational memory should be treated as a write-once audit log: every context operation (read, write, checkpoint, sanitise) emits a structured event that is immutable after creation.",
+      "rule": "Design the observational memory API so that audit emission is not optional and cannot be bypassed by agent code — instrument at the library boundary, not the caller."
+    },
+    {
+      "date": "2026-09-28",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Sanitisation scope must include inter-agent context, not only user input",
+      "context": "Current input sanitisation thinking focuses on the user→agent boundary, but agent→agent context passing is an equivalent injection vector when one agent in a fleet is compromised or receives adversarial tool output.",
+      "resolution": "Extend the sanitisation pipeline to run on payloads written to the fleet bus and on checkpoint data retrieved from other agents' runs, treating them as untrusted external input.",
+      "rule": "Any data crossing an agent trust boundary — regardless of whether it originated from a human — must pass through the same sanitisation gates as user input."
+    },
+    {
       "date": "2026-09-14",
       "phase": "auto",
       "category": "research",

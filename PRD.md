@@ -637,6 +637,22 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-09-28 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[Zero Trust for AI Agents Starts With Fixing Zero Visibility](https://thehackernews.com/2026/09/zero-trust-for-ai-agents-starts-with.html)**
+
+Research from the September 2026 zero-trust AI agent security discourse (precipitated by the Hugging Face/OpenAI agent evaluation intrusion) confirms that the shared context bus and cross-agent trust boundary features of agentctx are directly in the critical path of enterprise AI security posture. Key gaps identified industry-wide — no per-agent scoped context access, no tamper-evident audit trail, no forensic replay of context reads/writes — map onto capabilities agentctx either has in embryonic form or must prioritise: (1) append-only, principal-stamped observational memory, (2) trust-boundary enforcement with logged crossing events on the fleet bus, (3) sanitisation of inter-agent context payloads (not just user input), and (4) a structured audit log API consumable by SIEM tooling. These should be elevated to P0 in the next planning cycle as the market signal is now security-driven, not productivity-driven.
+
+- The fleet memory (shared context bus) is precisely the attack surface highlighted — agentctx must enforce and log cross-agent trust boundary crossings so that a compromised agent cannot silently read or poison another agent's context.
+- Observational memory needs tamper-evident append-only semantics; if an agent's context reads and writes can be reconstructed post-incident, agentctx becomes the forensic record that zero-trust audits require.
+- Input sanitisation should be extended to cover context payloads flowing across the fleet bus, not only user-facing inputs — a poisoned context object from one agent is equivalent to adversarial user input for the receiving agent.
+- Run state checkpointing should record the trust principal (agent identity + scope token) alongside each checkpoint so that replays and forensic replays can establish which agent wrote which state at which time.
+- agentctx should expose a structured audit log format (not raw logs) that security tooling (SIEMs, SOC dashboards) can ingest without custom parsing — this positions the library as the canonical visibility layer the article says is missing.
+
+---
+
 ### 2026-09-14 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

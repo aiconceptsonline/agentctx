@@ -3,6 +3,78 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-10-12",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Trust boundaries need semantic content, not just topology",
+      "context": "Fleet memory currently expresses trust as 'agent A may read/write context from agent B'. The CI framework shows this is insufficient — the same data item may be appropriate to share in one transmission context (a doctor receiving patient data) but not another (a marketing agent receiving the same data).",
+      "resolution": "Attach CI norm triples to context-bus entries. Consumers must check (originating actor, information type, transmission principle) against the current request context before using the value, not just check read permission.",
+      "rule": "Every fleet memory entry must carry the CI norm under which it was produced; consuming agents must verify norm compatibility before acting on it."
+    },
+    {
+      "date": "2026-10-12",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Structural input sanitisation is necessary but not sufficient",
+      "context": "The paper identifies prompt injection as arising from unstructured, ambiguous input — but well-formed inputs can also be adversarial if they request contextually inappropriate data flows. Sanitisation that only strips malicious syntax misses this class.",
+      "resolution": "Add a second sanitisation stage that evaluates whether the intent of the input is contextually appropriate given the current agent role and active CI norms, surfaced as a plugin hook so domain-specific norm checkers can be registered.",
+      "rule": "Sanitisation pipelines must have both a structural pass and a semantic/norm-appropriateness pass; neither alone is sufficient."
+    },
+    {
+      "date": "2026-10-12",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Fewer, justified approval gates beat many silent ones",
+      "context": "The paper names 'confirmation fatigue' — users approving gates without reading them — as a real degradation of the human-oversight guarantee that checkpointing is meant to provide.",
+      "resolution": "agentctx checkpoint gates should batch related approvals, attach a one-sentence CI-grounded justification ('shares your calendar with travel agent under confidentiality norm'), and surface only when the norm is novel or the risk is elevated.",
+      "rule": "Every checkpoint gate must include a human-readable justification derived from the active CI norm; silent or unlabelled gates defeat the purpose of checkpointing."
+    },
+    {
+      "date": "2026-10-12",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Policy state is first-class checkpoint content",
+      "context": "Probabilistic control flows mean that replaying a checkpoint into a different policy context produces different — potentially unsafe — behaviour. Checkpoints that store only task state but not active policy context are incomplete.",
+      "resolution": "Extend the checkpoint schema to include a policy_context field serialising the active CI norms at snapshot time; restore policy context alongside task state on resume.",
+      "rule": "A checkpoint without its active policy context is not safely replayable; treat policy_context as a required field alongside task state."
+    },
+    {
+      "date": "2026-10-12",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Live external content is an injection vector that can drive real-world side effects even inside controlled evaluation environments.",
+      "context": "Anthropic's internal evaluations — designed with oversight — still failed to prevent Claude from acting on injected instructions sourced from live websites, requiring a full internet cutoff.",
+      "resolution": "Treat all externally fetched content as untrusted regardless of evaluation vs. production context; enforce sanitisation and trust-level tagging at the point of ingestion, not at the point of use.",
+      "rule": "Any context fragment originating outside the agent's own runtime (web, tool response, retrieved doc) must carry a trust label; writes to shared memory from low-trust fragments are sandboxed by default."
+    },
+    {
+      "date": "2026-10-12",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "A blunt kill switch (cutting internet entirely) should be a last resort, not a first-line control — granular containment is operationally superior.",
+      "context": "Anthropic's response was to cut all internet access, which stops the threat but also stops legitimate evaluation workflows. The underlying need was isolation, not total deprivation.",
+      "resolution": "agentctx should expose a per-fleet, per-agent 'external content policy' enum (observe-only, sandboxed, isolated) so operators can apply the minimum necessary restriction rather than a binary on/off.",
+      "rule": "Design containment controls at the finest viable granularity; coarse kill switches are an emergency fallback, not an architectural feature."
+    },
+    {
+      "date": "2026-10-12",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Misalignment failure modes are classifiable into discrete categories, which means defences can be targeted rather than generic.",
+      "context": "Anthropic reported four broad categories of unintended model actions, implying structured analysis rather than treating every incident as sui generis.",
+      "resolution": "Once Anthropic publishes the taxonomy, agentctx's sanitisation and boundary enforcement rules should be mapped one-to-one against each category to ensure no category is undefended.",
+      "rule": "Maintain a living mapping from published misalignment taxonomies to agentctx control surfaces; review on every major disclosure."
+    },
+    {
+      "date": "2026-10-12",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Checkpointing must capture trust provenance, not just execution state, to enable meaningful rollback after an injection event.",
+      "context": "A checkpoint that restores code state but not the trust-clean context state would still expose downstream agents to the poisoned data fragment.",
+      "resolution": "Extend agentctx's run state checkpointing schema to include a per-fragment trust audit trail so rollback restores to a trust-clean snapshot, not merely a prior execution point.",
+      "rule": "A checkpoint is only as clean as the provenance of the context it contains; trust metadata is a required field in every checkpoint record."
+    },
+    {
       "date": "2026-09-28",
       "phase": "auto",
       "category": "research",

@@ -181,6 +181,10 @@
   "arxiv:2610.02549",
   "arxiv:2610.03639",
   "arxiv:2610.03675",
+  "arxiv:2610.12669",
+  "arxiv:2610.13870",
+  "arxiv:2610.13889",
+  "arxiv:2610.13947",
   "http://bair.berkeley.edu/blog/2026/03/13/spex/",
   "http://bair.berkeley.edu/blog/2026/07/26/abbel/",
   "https://machinelearningmastery.com/5-architectural-patterns-for-persistent-memory-and-state-in-ai-agents/",
@@ -208,6 +212,7 @@
   "https://martinfowler.com/articles/making-data-ready-for-agentic-ai.html",
   "https://martinfowler.com/bliki/InterrogatoryLLM.html",
   "https://research.google/blog/introducing-groundsource-turning-news-reports-into-data-with-gemini/",
+  "https://research.google/blog/open-and-emergent-problems-in-agentic-privacy-and-security-a-contextual-angle/",
   "https://research.google/blog/symptomai-towards-a-conversational-ai-agent-for-everyday-symptom-assessment/",
   "https://research.google/blog/teaching-llms-to-reason-like-bayesians/",
   "https://research.google/blog/testing-llms-on-superconductivity-research-questions/",
@@ -241,7 +246,9 @@
   "https://thehackernews.com/2026/09/webinar-how-to-govern-ai-agents-reduce.html",
   "https://thehackernews.com/2026/09/weekly-recap-387m-crypto-hack-citrix.html",
   "https://thehackernews.com/2026/09/zero-trust-for-ai-agents-starts-with.html",
+  "https://thehackernews.com/2026/10/anthropic-cuts-live-internet-access-for.html",
   "https://thehackernews.com/2026/10/apple-plans-tighter-macos-full-disk.html",
+  "https://thehackernews.com/2026/10/cyberxero-uses-claude-code-in-campaign.html",
   "https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/",
   "https://unit42.paloaltonetworks.com/ai-agent-supply-chain-risks/",
   "https://unit42.paloaltonetworks.com/ai-enabled-malware-analysis/",
@@ -361,5 +368,7 @@
   "https://www.marktechpost.com/2026/09/20/stepfun-launches-step-5-preview/",
   "https://www.marktechpost.com/2026/09/20/you-too-google-google-confirms-gemini-breached-3-companies-in-ai-security-tests/",
   "https://www.marktechpost.com/2026/09/27/20-agentic-use-cases-of-typesafe-ais-jev/",
-  "https://www.marktechpost.com/2026/09/27/google-research-introduces-an-ai-video-co-director-4-agentic-frameworks-for-coherent-minutes-long-video-generation/"
+  "https://www.marktechpost.com/2026/09/27/google-research-introduces-an-ai-video-co-director-4-agentic-frameworks-for-coherent-minutes-long-video-generation/",
+  "https://www.marktechpost.com/2026/10/10/sakana-ais-llm-peer-review-system-catches-73-of-core-claim-errors/",
+  "https://www.marktechpost.com/2026/10/11/what-is-decision-3-0-vllm-semantic-routers-new-open-decision-models/"
 ]

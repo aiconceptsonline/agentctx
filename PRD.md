@@ -637,6 +637,23 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-10-26 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[Stateful Agentic Engineering Copilots with Letta: Core Memory, Shared State, Semantic Retrieval, Custom Tools, Streaming, and Portable Agent Workflows](https://www.marktechpost.com/2026/10/24/stateful-engineering-copilots-letta-tutorial/)**
+
+The Letta stateful copilot pattern (Oct 2026) validates agentctx's core thesis and raises the bar on three fronts: (1) inspectable memory — the market now expects memory to be a live, externally readable data structure rather than an opaque prompt injection; agentctx's observational memory API should expose snapshot-diff and structured-read endpoints. (2) Two-tier memory architecture — separating a small hot block from a cold semantic archive is now a recognized best practice; agentctx should formalise a pluggable retrieval-backend interface alongside its in-process store. (3) Portable state bundles — Letta's workflow export demonstrates demand for checkpoint portability across runtimes; agentctx run-state format should be self-contained and include the trust policy manifest so agents can resume anywhere without reconfiguration.
+
+- agentctx's observational memory should expose a structured read interface (not just append/query) so orchestrators and debuggers can inspect and diff memory snapshots at any checkpoint — matching Letta's 'inspectable core memory' ergonomics.
+- The shared-memory-block pattern Letta uses for multi-agent coordination maps directly onto agentctx's fleet memory bus; agentctx should formalise the concept of a named, typed shared block with attach/detach semantics and version stamps to avoid silent overwrites.
+- agentctx's run-state checkpoints should be designed as self-contained portable bundles (memory snapshot + tool manifest + trust policy) so agents can migrate between runtimes without losing state — the Letta workflow export pattern validates this direction.
+- The two-tier memory model (hot inspectable block + cold vector archive) is now a market expectation; agentctx should provide a clear seam between its in-process observational memory and an optional pluggable retrieval backend (e.g., a vector store adapter interface).
+- Cross-agent trust boundaries in agentctx become load-bearing when shared memory blocks are writable by multiple agents; agentctx should enforce per-block write ACLs and emit audit events whenever a non-owning agent mutates shared state.
+- Streaming-compatible memory mutation (emitting memory-change events alongside token events) is an emerging expectation; agentctx's context engineering layer should produce a unified event stream so consumers do not need to poll for state changes.
+
+---
+
 ### 2026-10-12 — Research digest (automated)
 
 Auto-incorporated 2 item(s) with relevance ≥ 4.

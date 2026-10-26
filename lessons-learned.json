@@ -3,6 +3,33 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-10-26",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Inspectable memory is a competitive differentiator, not a debug convenience",
+      "context": "Letta markets 'inspectable core memory' as a headline feature, implying users and orchestrators actively query and diff memory state during normal operation, not just during post-mortem debugging.",
+      "resolution": "agentctx should promote its observational memory from an internal audit log to a first-class external API with snapshot, diff, and watch semantics.",
+      "rule": "Design memory interfaces for live inspection by external consumers; treat read access as a primary use-case alongside write."
+    },
+    {
+      "date": "2026-10-26",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Named shared blocks are safer than broadcast state for multi-agent coordination",
+      "context": "Letta's multi-agent shared state uses explicitly named, scoped blocks rather than a global bus, giving each agent a clear ownership and access contract.",
+      "resolution": "agentctx fleet memory should require explicit block names and attach declarations; implicit ambient state sharing should be disallowed by default to prevent trust-boundary leakage.",
+      "rule": "Every shared memory block must have an explicit owner, a declared set of authorised readers/writers, and a version stamp — no implicit ambient shared state."
+    },
+    {
+      "date": "2026-10-26",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Portability requires bundling policy alongside state",
+      "context": "Workflow portability fails if the trust policy and tool manifest are stored separately from the memory snapshot; a partial restore leaves agents in an inconsistent or overprivileged state.",
+      "resolution": "agentctx checkpoint bundles must include the trust policy, tool registrations, and memory snapshot as a single atomic artifact with a schema version header.",
+      "rule": "A checkpoint is only portable if it is self-describing; never separate policy from the state it governs."
+    },
+    {
       "date": "2026-10-12",
       "phase": "auto",
       "category": "research",

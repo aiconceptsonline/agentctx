@@ -637,6 +637,22 @@ design, and implementation milestones. New entries go at the top.
 
 ---
 
+### 2026-11-09 — Research digest (automated)
+
+Auto-incorporated 1 item(s) with relevance ≥ 4.
+
+**[Structuring Survey Histories for LLM Digital Twins: A Controlled Study of Background, Decision Procedure, and Evaluation Profiles](https://arxiv.org/abs/2611.08730)**
+
+A November 2026 arXiv study (Toubia et al., BDE paper) demonstrates that structuring LLM agent memory into three fixed slots — Background (stable identity and priors), Decision procedure (reasoning heuristics), and Evaluation (outcome signals) — yields statistically significant accuracy gains over raw transcript storage and over length-matched free-form summaries, across two distinct LLM simulators. The core finding is that schema-enforced structure, not information volume, drives predictive fidelity. For agentctx, this validates the design direction of schema-structured observational memory and motivates three concrete changes: (1) adopting a BDE-equivalent slot model as the canonical memory unit for both single-agent and fleet-memory storage, (2) rewriting the context-compression path to extract-then-discard (preserve slot content, drop raw transcript) rather than tail-truncate, and (3) standardising cross-agent profile transfer on the same slot schema so fleet-memory consumers can perform slot-addressed reads rather than unstructured summarisation. Component-composition results further suggest that the Evaluation slot should be treated as optional and time-decayed, since stale outcome signals may degrade rather than improve downstream accuracy.
+
+- Observational memory should store structured profiles (Background = stable agent identity/priors, Decision procedure = reasoning heuristics and tool-use patterns, Evaluation = reward/outcome signals) rather than raw interaction transcripts; this mirrors BDE and is expected to yield better predictive fidelity when memory is replayed into future context windows.
+- Context engineering layer should prioritise schema-enforced compression over length-based truncation: when evicting old context, agentctx should extract BDE-style slots and discard the raw transcript rather than naively trimming tokens from the tail.
+- Fleet memory and cross-agent context transfer benefit from a fixed shared schema: agents consuming a peer's profile via the shared context bus can rely on slot-addressable fields (background, procedure, evaluation) rather than parsing free-form summaries, strengthening cross-agent trust boundaries.
+- Run-state checkpoints should serialise agent state into decomposed slots; on restore, selective slot replay (e.g. skip stale Evaluation scores, keep Background unchanged) is safer and more accurate than replaying a monolithic transcript snapshot.
+- Input sanitisation pipeline should map raw user/agent inputs into the appropriate BDE slot before storage, enforcing schema at ingest time rather than at retrieval time.
+
+---
+
 ### 2026-10-26 — Research digest (automated)
 
 Auto-incorporated 1 item(s) with relevance ≥ 4.

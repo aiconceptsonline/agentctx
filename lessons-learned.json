@@ -3,6 +3,33 @@
   "description": "Running record of engineering lessons from building agentctx. Ordered newest-first within each phase.",
   "entries": [
     {
+      "date": "2026-11-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Structure beats volume in memory representations",
+      "context": "BDE profiles outperform both raw transcripts and length-matched free-form summaries, controlling for token count.",
+      "resolution": "agentctx memory writes should enforce a fixed schema at ingest; free-form or append-only logs should not be the primary storage format.",
+      "rule": "When compressing agent history, extract into typed slots first; never rely on downstream LLMs to impose structure at retrieval time."
+    },
+    {
+      "date": "2026-11-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Not all memory components age equally",
+      "context": "BDE component-composition analysis shows unequal contribution; Evaluation (outcome) signals are likely the most volatile.",
+      "resolution": "Apply differential TTLs per slot: Background slots persist longest, Decision procedure slots decay on role/task change, Evaluation slots expire on episode boundary.",
+      "rule": "Memory eviction policy must be slot-aware, not uniform; staleness is component-specific."
+    },
+    {
+      "date": "2026-11-09",
+      "phase": "auto",
+      "category": "research",
+      "lesson": "Fixed schemas improve cross-model portability",
+      "context": "BDE gains held across two distinct simulator models, suggesting the schema is model-agnostic.",
+      "resolution": "Fleet memory profiles should be versioned by schema, not by the model that produced them, enabling cross-agent reads even when agents run different underlying LLMs.",
+      "rule": "Shared context bus payloads must carry schema version metadata so consumers can validate slot semantics independently of producer model identity."
+    },
+    {
       "date": "2026-10-26",
       "phase": "auto",
       "category": "research",
